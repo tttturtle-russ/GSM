@@ -1,0 +1,10 @@
+D:\Jetbrains\apps\CLion\ch-1\231.6890.13\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=D:/Jetbrains/apps/CLion/ch-1/231.6890.13/bin/ninja/win/x64/ninja.exe -G Ninja -S D:\code\cpp\GSM -B D:\code\cpp\GSM\cmake-build-debug
+-- The CXX compiler identification is GNU 11.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Jetbrains/apps/CLion/ch-1/231.6890.13/bin/mingw/bin/g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/code/cpp/GSM/cmake-build-debug
