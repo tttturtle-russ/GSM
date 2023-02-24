@@ -8,7 +8,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <math.h>
+#include <cmath>
+#include <cstdlib>
 #define MAXX 109996
 #define MAXY 39946
 #define MINX (-26)
@@ -85,11 +86,10 @@ struct Node
         pos = _pos;
         data = _data;
     }
-    Node()
-    {
+    Node() {
         data = nullptr;
     }
-
+    bool inBoundary(double x1, double y1, double x2, double y2) const;
 };
 
 
@@ -100,12 +100,18 @@ class Quad
     Point topRight;
     // 根节点
     Node *n;
-
     // 子结点
     Quad *topLeftTree;
     Quad *topRightTree;
     Quad *botLeftTree;
     Quad *botRightTree;
+    void subdivide() {
+        Point mid = Point((botLeft.x + topRight.x)/2, (topRight.y + botLeft.y)/2);
+        topLeftTree = new Quad(botLeft, mid);
+        topRightTree = new Quad(Point(mid.x, botLeft.y), Point(topRight.x, mid.y));
+        botLeftTree = new Quad(Point(botLeft.x, mid.y), Point(mid.x, topRight.y));
+        botRightTree = new Quad(mid, topRight);
+    }
 public:
     Quad(Point _botLeft, Point _topRight);
     Quad();
@@ -117,14 +123,21 @@ public:
     //碰撞
     bool inBoundary(Point) const;
     bool inBoundary(Point p, double radius) const;
+    bool inBoundary(double x1,double y1,double x2,double y2) const;
     // 初始化
     bool init();
     // 查找给定点周围半径的所有节点
     void searchNearbyNodes(Point p, double radius, vector<Node *> &vector1);
-    void subdivide();
     void clear();
-
-    base *findMostPowerfulBase(Point, double radius);
+    // 查找最强基站
+    base *findMostPowerfulBase(Point,double radius = 10000);
+    // 显示西北角和东南角区域中的基站数据
+    void showBotRight() const;
+    void getNodesInBoundaryHelper(vector<Node *> &nodes, double x1, double y1, double x2, double y2) const;
+    vector<Node *> getNodesInBoundary(double d, double d1, double d2, double d3) const;
+    void showTopLeft() const;
+    void showEast() const;
+    void showSouth() const;
 };
 
 #endif //GSM_QUADTREE_H

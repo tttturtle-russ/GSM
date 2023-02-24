@@ -2,126 +2,11 @@
 // Created by liuhy on 2023/2/21.
 //
 
+#include <cstring>
 #include "QuadTree.h"
 string InitResult;
 void Quad::insert(Node *node)
 {
-//    if (node == nullptr)
-//        return;
-//
-//    // Current quad cannot contain it
-//    if (!inBoundary(node->pos))
-//        return;
-//
-//    // We are at a quad of unit area
-//    // We cannot subdivide this quad further
-//    if (abs(botLeft.x - topRight.x) <= 1 && abs(botLeft.y - topRight.y) <= 1)
-//    {
-//        if (this->n == nullptr)
-//            n = node;
-//        return;
-//    }
-//
-//    if ((botLeft.x + topRight.x) / 2 >= node->pos.x)
-//    {
-//        // Indicates topLeftTree
-//        if ((botLeft.y + topRight.y) / 2 >= node->pos.y)
-//        {
-//            if (this->topLeftTree == nullptr)
-//                topLeftTree = new Quad(
-//                        Point(botLeft.x, botLeft.y),
-//                        Point((botLeft.x + topRight.x) / 2,
-//                              (botLeft.y + topRight.y) / 2));
-//            topLeftTree->insert(node);
-//        }
-//
-//            // Indicates botLeftTree
-//        else
-//        {
-//            if (this->botLeftTree == nullptr)
-//                botLeftTree = new Quad(
-//                        Point(botLeft.x,
-//                              (botLeft.y + topRight.y) / 2),
-//                        Point((botLeft.x + topRight.x) / 2,
-//                              topRight.y));
-//            botLeftTree->insert(node);
-//        }
-//    }
-//    else
-//    {
-//        // Indicates topRightTree
-//        if ((botLeft.y + topRight.y) / 2 >= node->pos.y)
-//        {
-//            if (this->topRightTree == nullptr)
-//                topRightTree = new Quad(
-//                        Point((botLeft.x + topRight.x) / 2,
-//                              botLeft.y),
-//                        Point(topRight.x,
-//                              (botLeft.y + topRight.y) / 2));
-//            topRightTree->insert(node);
-//        }
-//
-//            // Indicates botRightTree
-//        else
-//        {
-//            if (this->botRightTree == nullptr)
-//                botRightTree = new Quad(
-//                        Point((botLeft.x + topRight.x) / 2,
-//                              (botLeft.y + topRight.y) / 2),
-//                        Point(topRight.x, topRight.y));
-//            botRightTree->insert(node);
-//        }
-//    }
-//    if (!inBoundary(node->pos)) {
-//        return;
-//    }
-//    // 如果当前四叉树为空，则将节点插入到当前节点
-//    if (n == nullptr) {
-//        n = node;
-//        return;
-//    }
-//    // 如果当前四叉树不为空，但范围仅为1个点，则创建四个子树
-//    if (botLeft == topRight) {
-//        if (topLeftTree == nullptr) {
-//            topLeftTree = new Quad(Point(botLeft.x, botLeft.y), Point((botLeft.x + topRight.x) / 2, (botLeft.y + topRight.y) / 2));
-//        }
-//        if (topRightTree == nullptr) {
-//            topRightTree = new Quad(Point((botLeft.x + topRight.x) / 2 + 1, botLeft.y), Point(topRight.x, (botLeft.y + topRight.y) / 2));
-//        }
-//        if (botLeftTree == nullptr) {
-//            botLeftTree = new Quad(Point(botLeft.x, (botLeft.y + topRight.y) / 2 + 1), Point((botLeft.x + topRight.x) / 2, topRight.y));
-//        }
-//        if (botRightTree == nullptr) {
-//            botRightTree = new Quad(Point((botLeft.x + topRight.x) / 2 + 1, (botLeft.y + topRight.y) / 2 + 1), Point(topRight.x, topRight.y));
-//        }
-//    }
-//    // 插入到子树中
-//    if (node->pos.x <= (botLeft.x + topRight.x) / 2) {
-//        if (node->pos.y <= (botLeft.y + topRight.y) / 2) {
-//            if (topLeftTree == nullptr) {
-//                topLeftTree = new Quad(Point(botLeft.x, botLeft.y), Point((botLeft.x + topRight.x) / 2, (botLeft.y + topRight.y) / 2));
-//            }
-//            topLeftTree->insert(node);
-//        } else {
-//            if (botLeftTree == nullptr) {
-//                botLeftTree = new Quad(Point(botLeft.x, (botLeft.y + topRight.y) / 2 + 1), Point((botLeft.x + topRight.x) / 2, topRight.y));
-//            }
-//            botLeftTree->insert(node);
-//        }
-//    } else {
-//        if (node->pos.y <= (botLeft.y + topRight.y) / 2) {
-//            if (topRightTree == nullptr) {
-//                topRightTree = new Quad(Point((botLeft.x + topRight.x) / 2 + 1, botLeft.y), Point(topRight.x, (botLeft.y + topRight.y) / 2));
-//            }
-//            topRightTree->insert(node);
-//        } else {
-//            if (botRightTree == nullptr) {
-//                botRightTree = new Quad(Point((botLeft.x + topRight.x) / 2 + 1, (botLeft.y + topRight.y) / 2 + 1), Point(topRight.x, topRight.y));
-//            }
-//            botRightTree->insert(node);
-//        }
-//    }
-// 检查当前节点是否在 Quadtree 的范围内
     // 如果节点不在当前节点的范围内，则返回
     if (!inBoundary(node->pos)) {
         return;
@@ -141,36 +26,22 @@ void Quad::insert(Node *node)
     botRightTree->insert(node);
 }
 
-void Quad::subdivide() {
-    Point mid = Point((botLeft.x + topRight.x)/2, (topRight.y + botLeft.y)/2);
-    topLeftTree = new Quad(botLeft, mid);
-    topRightTree = new Quad(Point(mid.x, botLeft.y), Point(topRight.x, mid.y));
-    botLeftTree = new Quad(Point(botLeft.x, mid.y), Point(mid.x, topRight.y));
-    botRightTree = new Quad(mid, topRight);
-}
+
 
 Node* Quad::search(Point p)
 {
-    // Current quad cannot contain it
     if (!inBoundary(p))
         return nullptr;
-
-    // We are at a quad of unit length
-    // We cannot subdivide this quad further
-    if (this->n != nullptr)
+    if (this->n->pos == p)
         return n;
-
     if ((botLeft.x + topRight.x) / 2 >= p.x)
     {
-        // Indicates topLeftTree
         if ((botLeft.y + topRight.y) / 2 >= p.y)
         {
             if (this->topLeftTree == nullptr)
                 return nullptr;
             return topLeftTree->search(p);
         }
-
-            // Indicates botLeftTree
         else
         {
             if (this->botLeftTree == nullptr)
@@ -180,15 +51,12 @@ Node* Quad::search(Point p)
     }
     else
     {
-        // Indicates topRightTree
         if ((botLeft.y + topRight.y) / 2 >= p.y)
         {
             if (this->topRightTree == nullptr)
                 return nullptr;
             return topRightTree->search(p);
         }
-
-            // Indicates botRightTree
         else
         {
             if (this->botRightTree == nullptr)
@@ -210,6 +78,10 @@ bool Quad::inBoundary(Point p) const
 bool Quad::inBoundary(Point p, double radius) const {
     return p.x >= botLeft.x - radius && p.x <= topRight.x + radius
            && p.y >= botLeft.y - radius && p.y <= topRight.y + radius;
+}
+
+bool Quad::inBoundary(double x1, double y1, double x2, double y2) const {
+    return (topRight.x >= x1 && botLeft.x <= x2 && topRight.y >= y1 && botLeft.y <= y2);
 }
 
 Quad::Quad(Point _botLeft, Point _topRight)
@@ -237,38 +109,49 @@ Quad::Quad()
 
 
 bool Quad::init() {
+    auto mode = std::getenv("mode");
     // read from ./data/*.txt and store them to QuadTree
-//    ifstream f1 ("./data/jz001.txt", ios::in);
-//    ifstream f2 ("./data/jz002.txt", ios::in);
-//    if (!f1.is_open()|| !f2.is_open()) {
-//        InitResult = "Error: cannot open file";
-//        return false;
-//    }
-    ifstream f("./data/test.txt", ios::in);
-    if (!f.is_open()){
-        InitResult = "Error: cannot open file";
-        return false;
+    ifstream f1,f2,t;
+    if (strcmp(mode,"release") == 0) {
+        cout << "release mode" << endl;
+        f1.open("./data/jz001.txt", ios::in);
+        f2.open("./data/jz002.txt", ios::in);
+        if (!f1.is_open()|| !f2.is_open()) {
+            InitResult = "Error: cannot open file";
+            return false;
+        }
+    }
+    else{
+        t.open("./data/test.txt", ios::in);
+        cout << "test mode" << endl;
+        if (!t.is_open()) {
+            InitResult = "Error: cannot open file";
+            return false;
+        }
     }
     // read jz001.txt
     string buf;
     vector<string > v;
-//    getline(f1,buf);
-//    while (getline(f1,buf)) {
-//        v.push_back(buf);
-//    }
-//    v.pop_back();
-//    getline(f2,buf);
-//    while (getline(f2,buf)) {
-//        v.push_back(buf);
-//    }
-//    v.pop_back();
-    getline(f,buf);
-    while (getline(f,buf)) {
-        v.push_back(buf);
-    }
-    v.pop_back();
-    cout << v.size() << endl;
     // 不处理第一行和最后一行
+    if (strcmp(mode,"release") == 0){
+        getline(f1,buf);
+        while (getline(f1,buf)) {
+           v.push_back(buf);
+        }
+        v.pop_back();
+        getline(f2,buf);
+        while (getline(f2,buf)) {
+            v.push_back(buf);
+        }
+        v.pop_back();
+    } else{
+        getline(t,buf);
+        while (getline(t,buf)) {
+            v.push_back(buf);
+        }
+        v.pop_back();
+    }
+    cout << v.size() << endl;
     for (const auto & i : v) {
         istringstream iss(i);
         vector<string> tokens;
@@ -285,9 +168,9 @@ bool Quad::init() {
         // 将上述数据插入四叉树
         this->insert(new Node(Point(x,y),new base(Point(x,y),id,power,type)));
     }
-//    f1.close();
-//    f2.close();
-    f.close();
+    f1.close();
+    f2.close();
+    t.close();
     InitResult = "Init Success!";
     return true;
 }
@@ -330,8 +213,8 @@ Quad::~Quad() {
     clear();
 }
 
-base* Quad::findMostPowerfulBase(Point p, double radius) {
-    vector<Node *> result;
+base* Quad::findMostPowerfulBase(Point p,double radius) {
+    vector<Node*> result;
     searchNearbyNodes(p, radius, result);
     if (result.empty()) {
         return nullptr;
@@ -341,10 +224,90 @@ base* Quad::findMostPowerfulBase(Point p, double radius) {
         if (mostPowerfulBase == nullptr) {
             mostPowerfulBase = i->data;
         } else {
-            if (i->data->power > mostPowerfulBase->power) {
+            if (!mostPowerfulBase->isPowerful(i->data,p)) {
                 mostPowerfulBase = i->data;
             }
         }
     }
     return mostPowerfulBase;
+}
+
+void Quad::showTopLeft() const {
+    double x1 = botLeft.x;  // 西边界
+    double y1 = topRight.y; // 北边界
+    double x2 = topRight.x; // 东边界
+    double y2 = botLeft.y;  // 南边界
+    // 循环遍历所有基站节点，输出在西北角的节点信息
+    auto result = getNodesInBoundary(x1, y1, x1 + (x2 - x1) / 2.0, y1 - (y1 - y2) / 2.0);
+    cout << "西北角有" << result.size() << "个节点" << endl;
+    for (Node* node : result) {
+        cout << "西北角节点：" << node->data->id << endl;
+    }
+}
+
+void Quad::showBotRight() const {
+    double x1 = botLeft.x;  // 西边界
+    double y1 = topRight.y; // 北边界
+    double x2 = topRight.x; // 东边界
+    double y2 = botLeft.y;  // 南边界
+    // 循环遍历所有基站节点，输出在东南角的节点信息
+    auto result = getNodesInBoundary(x2 - (x2 - x1) / 2.0, y2 + (y1 - y2) / 2.0, x2, y2);
+    cout << "东南角有" << result.size() << "个节点" << endl;
+    for (Node* node : result){
+        cout << "东南角节点：" << node->data->id << endl;
+    }
+}
+
+vector<Node*> Quad::getNodesInBoundary(double x1, double y1, double x2, double y2) const {
+    vector<Node*> nodes;
+    getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
+    return nodes;
+}
+
+void Quad::getNodesInBoundaryHelper(vector<Node*>& nodes, double x1, double y1, double x2, double y2) const
+{
+//    if (!inBoundary(x1, y1, x2, y2)) {
+//        return;
+//    }
+    if (n != nullptr) {
+        if (n->inBoundary(x1, y1, x2, y2)) {
+            nodes.push_back(n);
+        }
+    }
+    if (topLeftTree != nullptr) {
+        topLeftTree->getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
+    }
+    if (topRightTree != nullptr) {
+        topRightTree->getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
+    }
+    if (botLeftTree != nullptr) {
+        botLeftTree->getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
+    }
+    if (botRightTree != nullptr) {
+        botRightTree->getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
+    }
+}
+
+void Quad::showEast() const{
+    double x1 = botLeft.x;  // 西边界
+    double y1 = topRight.y; // 北边界
+    double x2 = topRight.x; // 东边界
+    double y2 = botLeft.y;  // 南边界
+    auto result = getNodesInBoundary(x2 - (x2 - x1) / 2.0, y1, x2, y2);
+    cout << "东边有" << result.size() << "个节点" << endl;
+    for (Node* node : result){
+        cout << "东边节点：" << node->data->id << endl;
+    }
+}
+// 显示南侧节点
+void Quad::showSouth() const{
+    double x1 = botLeft.x;  // 西边界
+    double y1 = topRight.y; // 北边界
+    double x2 = topRight.x; // 东边界
+    double y2 = botLeft.y;  // 南边界
+    auto result = getNodesInBoundary(x1, y2 + (y1 - y2) / 2.0, x2, y2);
+    cout << "南边有" << result.size() << "个节点" << endl;
+    for (Node* node : result){
+        cout << "南边节点：" << node->data->id << endl;
+    }
 }

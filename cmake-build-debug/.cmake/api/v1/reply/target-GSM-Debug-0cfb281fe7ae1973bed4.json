@@ -100,7 +100,8 @@
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				2
+				2,
+				4
 			]
 		}
 	],
@@ -128,6 +129,11 @@
 			"compileGroupIndex" : 0,
 			"path" : "util.cpp",
 			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "util.h",
+			"sourceGroupIndex" : 1
 		}
 	],
 	"type" : "EXECUTABLE"
