@@ -15,36 +15,6 @@
 #define MINY (-82)
 using namespace std;
 extern string InitResult;
-typedef struct base_station{
-    int x,y,id;
-    float power;
-    string type;
-    base_station(int _x,int _y, int _id,float _power,string _type){
-        x = _x;
-        y = _y;
-        id = _id;
-        power = _power;
-        type = _type;
-    }
-}base;
-
-typedef struct fake_station{
-    int xs,ys,xe,ye,speed,id;
-    int start,duration;
-    string type;
-    fake_station(int _xs,int _ys,int _xe,int _ye,int _speed,int _id,int _start,int _duration,string _type){
-        xs = _xs;
-        ys = _ys;
-        xe = _xe;
-        ye = _ye;
-        speed = _speed;
-        id = _id;
-        start = _start;
-        duration = _duration;
-        type = _type;
-    }
-}fake;
-
 struct Point
 {
     int x;
@@ -68,6 +38,43 @@ struct Point
         return sqrt(pow(x - point.x, 2) + pow(y - point.y, 2));
     }
 };
+typedef struct base_station{
+    Point p;
+    int id;
+    float power;
+    string type;
+    base_station(Point _p, int _id,float _power,string _type){
+        p = _p;
+        id = _id;
+        power = _power;
+        type = _type;
+    }
+    double distance(Point _p);
+    bool isPowerful(base_station *b,Point p);
+}base;
+
+typedef struct fake_station{
+    Point s_point,e_point;
+    int speed,id;
+    int start,duration;
+    string type;
+    fake_station(Point s_p,Point e_p,int _speed,int _id,int _start,int _duration,string _type){
+        s_point = s_p;
+        e_point = e_p;
+        speed = _speed;
+        id = _id;
+        start = _start;
+        duration = _duration;
+        type = _type;
+    }
+}fake;
+
+typedef struct mobile {
+    int xs,ys,xe,ye;
+    int speed;
+    int start_hour,start_min;
+}mobile;
+
 
 struct Node
 {
@@ -102,16 +109,22 @@ class Quad
 public:
     Quad(Point _botLeft, Point _topRight);
     Quad();
+    ~Quad();
     //插入
     void insert(Node*);
     //搜索
     Node* search(Point);
     //碰撞
     bool inBoundary(Point) const;
+    bool inBoundary(Point p, double radius) const;
+    // 初始化
     bool init();
-    void searchTopLeft(vector<Node*> &result);
+    // 查找给定点周围半径的所有节点
+    void searchNearbyNodes(Point p, double radius, vector<Node *> &vector1);
+    void subdivide();
+    void clear();
 
-    vector<Node *> searchNearbyNodes(Point p, double radius);
+    base *findMostPowerfulBase(Point, double radius);
 };
 
 #endif //GSM_QUADTREE_H

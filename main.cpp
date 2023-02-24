@@ -6,7 +6,8 @@ int main() {
     auto * q = new Quad(Point(MINX,MINY),Point(MAXX,MAXY));
     q->init();
     cout << InitResult << endl;
-    auto result = q->searchNearbyNodes(Point(13223,14988),1000000);
+    vector<Node*> result;
+    q->searchNearbyNodes(Point(2986,15024),1000,result);
     for (const auto &item: result)
         cout << item->data->id << endl;
 }

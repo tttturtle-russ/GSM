@@ -141,6 +141,13 @@ void Quad::insert(Node *node)
     botRightTree->insert(node);
 }
 
+void Quad::subdivide() {
+    Point mid = Point((botLeft.x + topRight.x)/2, (topRight.y + botLeft.y)/2);
+    topLeftTree = new Quad(botLeft, mid);
+    topRightTree = new Quad(Point(mid.x, botLeft.y), Point(topRight.x, mid.y));
+    botLeftTree = new Quad(Point(botLeft.x, mid.y), Point(mid.x, topRight.y));
+    botRightTree = new Quad(mid, topRight);
+}
 
 Node* Quad::search(Point p)
 {
@@ -200,6 +207,10 @@ bool Quad::inBoundary(Point p) const
             p.y <= this->topRight.y);
 }
 
+bool Quad::inBoundary(Point p, double radius) const {
+    return p.x >= botLeft.x - radius && p.x <= topRight.x + radius
+           && p.y >= botLeft.y - radius && p.y <= topRight.y + radius;
+}
 
 Quad::Quad(Point _botLeft, Point _topRight)
 {
@@ -272,7 +283,7 @@ bool Quad::init() {
         float power = stof(p);
         int id = stoi(token);
         // 将上述数据插入四叉树
-        this->insert(new Node(Point(x,y),new base(x,y,id,power,type)));
+        this->insert(new Node(Point(x,y),new base(Point(x,y),id,power,type)));
     }
 //    f1.close();
 //    f2.close();
@@ -281,47 +292,59 @@ bool Quad::init() {
     return true;
 }
 
-void Quad::searchTopLeft(vector<Node*> &result) {
+/*
+ * 搜索给定半径内和坐标的所有节点
+ */
+void Quad::searchNearbyNodes(Point p, double radius, vector<Node *> &result) {
+    // 如果当前节点的范围没有与给定半径相交，则返回
+    if (!inBoundary(p, radius)) {
+        return;
+    }
+    // 如果当前节点没有子节点，则将该节点添加到结果中
     if (n != nullptr) {
-        result.push_back(n);
-    }
-    if (topLeftTree != nullptr) {
-        topLeftTree->searchTopLeft(result);
-        topRightTree->searchTopLeft(result);
-        botLeftTree->searchTopLeft(result);
-        botRightTree->searchTopLeft(result);
-    }
-}
-
-vector<Node*> Quad::searchNearbyNodes(Point p, double radius) {
-    vector<Node*> result;
-
-    if (!inBoundary(p)) {
-        // 如果点不在 Quadtree 范围内，返回空结果向量
-        return result;
-    }
-
-    if (n != nullptr) {
-        // 如果当前节点包含一个节点，则检查该节点是否在半径内，如果在，则添加到结果向量中
         double distance = n->pos.distance(p);
         if (distance <= radius) {
             result.push_back(n);
         }
     }
-
+    // 如果当前节点有子节点，则递归搜索它们
     if (topLeftTree != nullptr) {
-        // 如果当前节点有子节点，则递归调用子节点的 searchNearbyNodes 方法
-        vector<Node*> topLeftResult = topLeftTree->searchNearbyNodes(p, radius);
-        vector<Node*> topRightResult = topRightTree->searchNearbyNodes(p, radius);
-        vector<Node*> botLeftResult = botLeftTree->searchNearbyNodes(p, radius);
-        vector<Node*> botRightResult = botRightTree->searchNearbyNodes(p, radius);
-
-        // 将所有子节点的结果向量合并
-        result.insert(result.end(), topLeftResult.begin(), topLeftResult.end());
-        result.insert(result.end(), topRightResult.begin(), topRightResult.end());
-        result.insert(result.end(), botLeftResult.begin(), botLeftResult.end());
-        result.insert(result.end(), botRightResult.begin(), botRightResult.end());
+        topLeftTree->searchNearbyNodes(p, radius, result);
+        topRightTree->searchNearbyNodes(p, radius, result);
+        botLeftTree->searchNearbyNodes(p, radius, result);
+        botRightTree->searchNearbyNodes(p, radius, result);
     }
+}
 
-    return result;
+void Quad::clear() {
+    if (topLeftTree != nullptr) {
+        topLeftTree->clear();
+        topRightTree->clear();
+        botLeftTree->clear();
+        botRightTree->clear();
+    }
+    delete this;
+}
+
+Quad::~Quad() {
+    clear();
+}
+
+base* Quad::findMostPowerfulBase(Point p, double radius) {
+    vector<Node *> result;
+    searchNearbyNodes(p, radius, result);
+    if (result.empty()) {
+        return nullptr;
+    }
+    base *mostPowerfulBase = nullptr;
+    for (auto & i : result) {
+        if (mostPowerfulBase == nullptr) {
+            mostPowerfulBase = i->data;
+        } else {
+            if (i->data->power > mostPowerfulBase->power) {
+                mostPowerfulBase = i->data;
+            }
+        }
+    }
+    return mostPowerfulBase;
 }
