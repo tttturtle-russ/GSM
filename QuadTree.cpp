@@ -1,114 +1,11 @@
 //
-// Created by liuhy on 2023/2/21.
+// Created by liuhy on 2023/2/24.
 //
 
-#include <cstring>
 #include "QuadTree.h"
-string InitResult;
-void Quad::insert(Node *node)
-{
-    // Èç¹û½Úµã²»ÔÚµ±Ç°½ÚµãµÄ·¶Î§ÄÚ£¬Ôò·µ»Ø
-    if (!inBoundary(node->pos)) {
-        return;
-    }
-    // Èç¹ûµ±Ç°½ÚµãÃ»ÓĞ×Ó½Úµã£¬Ôò½«¸Ã½Úµã×÷Îªµ±Ç°½ÚµãµÄ×Ó½Úµã
-    if (n == nullptr) {
-        n = node;
-        return;
-    }
-    // Èç¹ûµ±Ç°½ÚµãÓĞ×Ó½Úµã£¬Ôò½«¸Ã½Úµã²åÈëµ½ÊÊµ±µÄ×Ó½ÚµãÖĞ
-    if (topLeftTree == nullptr) {
-        subdivide();
-    }
-    topLeftTree->insert(node);
-    topRightTree->insert(node);
-    botLeftTree->insert(node);
-    botRightTree->insert(node);
-}
 
 
-
-Node* Quad::search(Point p)
-{
-    if (!inBoundary(p))
-        return nullptr;
-    if (this->n->pos == p)
-        return n;
-    if ((botLeft.x + topRight.x) / 2 >= p.x)
-    {
-        if ((botLeft.y + topRight.y) / 2 >= p.y)
-        {
-            if (this->topLeftTree == nullptr)
-                return nullptr;
-            return topLeftTree->search(p);
-        }
-        else
-        {
-            if (this->botLeftTree == nullptr)
-                return nullptr;
-            return botLeftTree->search(p);
-        }
-    }
-    else
-    {
-        if ((botLeft.y + topRight.y) / 2 >= p.y)
-        {
-            if (this->topRightTree == nullptr)
-                return nullptr;
-            return topRightTree->search(p);
-        }
-        else
-        {
-            if (this->botRightTree == nullptr)
-                return nullptr;
-            return botRightTree->search(p);
-        }
-    }
-};
-
-
-bool Quad::inBoundary(Point p) const
-{
-    return (p.x >= this->botLeft.x &&
-            p.x <= this->topRight.x &&
-            p.y >= this->botLeft.y &&
-            p.y <= this->topRight.y);
-}
-
-bool Quad::inBoundary(Point p, double radius) const {
-    return p.x >= botLeft.x - radius && p.x <= topRight.x + radius
-           && p.y >= botLeft.y - radius && p.y <= topRight.y + radius;
-}
-
-bool Quad::inBoundary(double x1, double y1, double x2, double y2) const {
-    return (topRight.x >= x1 && botLeft.x <= x2 && topRight.y >= y1 && botLeft.y <= y2);
-}
-
-Quad::Quad(Point _botLeft, Point _topRight)
-{
-    botLeft = _botLeft;
-    topRight = _topRight;
-    n = nullptr;
-    topLeftTree  = nullptr;
-    topRightTree = nullptr;
-    botLeftTree  = nullptr;
-    botRightTree = nullptr;
-}
-
-
-Quad::Quad()
-{
-    botLeft = Point(0, 0);
-    topRight = Point(0, 0);
-    n = nullptr;
-    topLeftTree  = nullptr;
-    topRightTree = nullptr;
-    botLeftTree  = nullptr;
-    botRightTree = nullptr;
-}
-
-
-bool Quad::init() {
+string QuadTree::init() {
     auto mode = std::getenv("mode");
     // read from ./data/*.txt and store them to QuadTree
     ifstream f1,f2,t;
@@ -117,26 +14,24 @@ bool Quad::init() {
         f1.open("./data/jz001.txt", ios::in);
         f2.open("./data/jz002.txt", ios::in);
         if (!f1.is_open()|| !f2.is_open()) {
-            InitResult = "Error: cannot open file";
-            return false;
+            return "Error open file";
         }
     }
     else{
         t.open("./data/test.txt", ios::in);
         cout << "test mode" << endl;
         if (!t.is_open()) {
-            InitResult = "Error: cannot open file";
-            return false;
+            return "Error open file";
         }
     }
     // read jz001.txt
     string buf;
     vector<string > v;
-    // ²»´¦ÀíµÚÒ»ĞĞºÍ×îºóÒ»ĞĞ
+    // ä¸å¤„ç†ç¬¬ä¸€è¡Œå’Œæœ€åä¸€è¡Œ
     if (strcmp(mode,"release") == 0){
         getline(f1,buf);
         while (getline(f1,buf)) {
-           v.push_back(buf);
+            v.push_back(buf);
         }
         v.pop_back();
         getline(f2,buf);
@@ -165,149 +60,225 @@ bool Quad::init() {
         ss >> type >> p;
         float power = stof(p);
         int id = stoi(token);
-        // ½«ÉÏÊöÊı¾İ²åÈëËÄ²æÊ÷
-        this->insert(new Node(Point(x,y),new base(Point(x,y),id,power,type)));
+        // å°†ä¸Šè¿°æ•°æ®æ’å…¥å››å‰æ ‘
+        insert(new Point(x,y,new base(id,power,type)));
     }
     f1.close();
     f2.close();
     t.close();
-    InitResult = "Init Success!";
-    return true;
+    return "Init Successfully";
 }
 
-/*
- * ËÑË÷¸ø¶¨°ë¾¶ÄÚºÍ×ø±êµÄËùÓĞ½Úµã
- */
-void Quad::searchNearbyNodes(Point p, double radius, vector<Node *> &result) {
-    // Èç¹ûµ±Ç°½ÚµãµÄ·¶Î§Ã»ÓĞÓë¸ø¶¨°ë¾¶Ïà½»£¬Ôò·µ»Ø
-    if (!inBoundary(p, radius)) {
+void QuadTree::insert(Point *p) {
+    if (p->x > x + w || p->x < x || p->y > y + h || p->y < y)
         return;
-    }
-    // Èç¹ûµ±Ç°½ÚµãÃ»ÓĞ×Ó½Úµã£¬Ôò½«¸Ã½ÚµãÌí¼Óµ½½á¹ûÖĞ
-    if (n != nullptr) {
-        double distance = n->pos.distance(p);
-        if (distance <= radius) {
-            result.push_back(n);
-        }
-    }
-    // Èç¹ûµ±Ç°½ÚµãÓĞ×Ó½Úµã£¬Ôòµİ¹éËÑË÷ËüÃÇ
-    if (topLeftTree != nullptr) {
-        topLeftTree->searchNearbyNodes(p, radius, result);
-        topRightTree->searchNearbyNodes(p, radius, result);
-        botLeftTree->searchNearbyNodes(p, radius, result);
-        botRightTree->searchNearbyNodes(p, radius, result);
-    }
-}
-
-void Quad::clear() {
-    if (topLeftTree != nullptr) {
-        topLeftTree->clear();
-        topRightTree->clear();
-        botLeftTree->clear();
-        botRightTree->clear();
-    }
-    delete this;
-}
-
-Quad::~Quad() {
-    clear();
-}
-
-base* Quad::findMostPowerfulBase(Point p,double radius) {
-    vector<Node*> result;
-    searchNearbyNodes(p, radius, result);
-    if (result.empty()) {
-        return nullptr;
-    }
-    base *mostPowerfulBase = nullptr;
-    for (auto & i : result) {
-        if (mostPowerfulBase == nullptr) {
-            mostPowerfulBase = i->data;
-        } else {
-            if (!mostPowerfulBase->isPowerful(i->data,p)) {
-                mostPowerfulBase = i->data;
+    if (isLeaf()){
+        if (value.size() < POINT_CAPACITY){
+            value.push_back(p);
+        }else{
+            subdivide();
+            for (auto i : value) {
+                if (i->x < nw->x + nw->w && i->y > nw->y){
+                    nw->insert(i);
+                }else if (i->x > ne->x && i->y > ne->y){
+                    ne->insert(i);
+                }else if (i->x < sw->x + sw->w && i->y > sw->y){
+                    sw->insert(i);
+                }else{
+                    se->insert(i);
+                }
             }
+            value.clear();
+        }
+    }else{
+        if (p->x < nw->x + nw->w && p->y > nw->y){
+            nw->insert(p);
+        }else if (p->x > ne->x && p->y > ne->y){
+            ne->insert(p);
+        }else if (p->x < sw->x + sw->w && p->y > sw->y){
+            sw->insert(p);
+        }else{
+            se->insert(p);
         }
     }
-    return mostPowerfulBase;
 }
 
-void Quad::showTopLeft() const {
-    double x1 = botLeft.x;  // Î÷±ß½ç
-    double y1 = topRight.y; // ±±±ß½ç
-    double x2 = topRight.x; // ¶«±ß½ç
-    double y2 = botLeft.y;  // ÄÏ±ß½ç
-    // Ñ­»·±éÀúËùÓĞ»ùÕ¾½Úµã£¬Êä³öÔÚÎ÷±±½ÇµÄ½ÚµãĞÅÏ¢
-    auto result = getNodesInBoundary(x1, y1, x1 + (x2 - x1) / 2.0, y1 - (y1 - y2) / 2.0);
-    cout << "Î÷±±½ÇÓĞ" << result.size() << "¸ö½Úµã" << endl;
-    for (Node* node : result) {
-        cout << "Î÷±±½Ç½Úµã£º" << node->data->id << endl;
+
+
+Point *QuadTree::query(const Point &p) const {
+    if (nw == nullptr) {
+        for (auto i:value) {
+            if (*i == p){
+                return i;
+            }
+        };
+        return nullptr;// å¦‚æœå½“å‰èŠ‚ç‚¹ä¸æ˜¯å¶å­èŠ‚ç‚¹ï¼Œä½†è¿˜æ²¡æœ‰å­èŠ‚ç‚¹ï¼Œè¿”å›å­˜å‚¨çš„å€¼
+    }
+
+    if (isLeaf()) {
+        for (auto i:value) {
+            if (*i == p){
+                return i;
+            }
+            return nullptr;
+        }; // å¦‚æœå½“å‰èŠ‚ç‚¹æ˜¯å¶å­èŠ‚ç‚¹ï¼Œè¿”å›å­˜å‚¨çš„å€¼
+    }
+
+    if (p.x < x + w / 2 && p.y > y + h / 2) {
+        return nw->query(p); // å¦‚æœæŸ¥è¯¢ç‚¹åœ¨å·¦ä¸Šå­èŠ‚ç‚¹æ‰€è¡¨ç¤ºçš„çŸ©å½¢åŒºåŸŸå†…ï¼Œåˆ™é€’å½’æŸ¥è¯¢å·¦ä¸Šå­èŠ‚ç‚¹
+    } else if (p.x > x + w / 2 && p.y > y + h / 2) {
+        return ne->query(p); // å¦‚æœæŸ¥è¯¢ç‚¹åœ¨å³ä¸Šå­èŠ‚ç‚¹æ‰€è¡¨ç¤ºçš„çŸ©å½¢åŒºåŸŸå†…ï¼Œåˆ™é€’å½’æŸ¥è¯¢å³ä¸Šå­èŠ‚ç‚¹
+    } else if (p.x < x + w / 2 && p.y < y + h / 2) {
+        return sw->query(p); // å¦‚æœæŸ¥è¯¢ç‚¹åœ¨å·¦ä¸‹å­èŠ‚ç‚¹æ‰€è¡¨ç¤ºçš„çŸ©å½¢åŒºåŸŸå†…ï¼Œåˆ™é€’å½’æŸ¥è¯¢å·¦ä¸‹å­èŠ‚ç‚¹
+    } else {
+        return se->query(p); // å¦‚æœæŸ¥è¯¢ç‚¹åœ¨å³ä¸‹å­èŠ‚ç‚¹æ‰€è¡¨ç¤ºçš„çŸ©å½¢åŒºåŸŸå†…ï¼Œåˆ™é€’å½’æŸ¥è¯¢å³ä¸‹å­èŠ‚ç‚¹
     }
 }
 
-void Quad::showBotRight() const {
-    double x1 = botLeft.x;  // Î÷±ß½ç
-    double y1 = topRight.y; // ±±±ß½ç
-    double x2 = topRight.x; // ¶«±ß½ç
-    double y2 = botLeft.y;  // ÄÏ±ß½ç
-    // Ñ­»·±éÀúËùÓĞ»ùÕ¾½Úµã£¬Êä³öÔÚ¶«ÄÏ½ÇµÄ½ÚµãĞÅÏ¢
-    auto result = getNodesInBoundary(x2 - (x2 - x1) / 2.0, y2 + (y1 - y2) / 2.0, x2, y2);
-    cout << "¶«ÄÏ½ÇÓĞ" << result.size() << "¸ö½Úµã" << endl;
-    for (Node* node : result){
-        cout << "¶«ÄÏ½Ç½Úµã£º" << node->data->id << endl;
-    }
+bool QuadTree::intersects(double rx, double ry, double rw, double rh) const {
+    double rMaxX = rx + rw;
+    double rMaxY = ry + rh;
+    return !(x > rMaxX || x + w < rx || y > rMaxY || y + h < ry);
 }
 
-vector<Node*> Quad::getNodesInBoundary(double x1, double y1, double x2, double y2) const {
-    vector<Node*> nodes;
-    getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
-    return nodes;
-}
-
-void Quad::getNodesInBoundaryHelper(vector<Node*>& nodes, double x1, double y1, double x2, double y2) const
-{
-//    if (!inBoundary(x1, y1, x2, y2)) {
-//        return;
-//    }
-    if (n != nullptr) {
-        if (n->inBoundary(x1, y1, x2, y2)) {
-            nodes.push_back(n);
+vector<Point *> QuadTree::findFirstNorthWestPoints() const {
+    auto tmp = this;
+    while(true){
+        if (!tmp->nw->isLeaf()){
+            tmp = tmp->nw;
+        }else if (!tmp->ne->isLeaf()){
+            tmp = tmp->ne;
+        }else if (!tmp->sw->isLeaf()){
+            tmp = tmp->sw;
+        }else if (!tmp->se->isLeaf()){
+            tmp = tmp->se;
+        }else{
+            if (!tmp->nw->value.empty()){
+                tmp = tmp->nw;
+            }else if (!tmp->ne->value.empty()){
+                tmp = tmp->ne;
+            }else if (!tmp->sw->value.empty()){
+                tmp = tmp->sw;
+            }else if (!tmp->se->value.empty()){
+                tmp = tmp->se;
+            }else{
+                return tmp->value;
+            }
+            break;
         }
     }
-    if (topLeftTree != nullptr) {
-        topLeftTree->getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
-    }
-    if (topRightTree != nullptr) {
-        topRightTree->getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
-    }
-    if (botLeftTree != nullptr) {
-        botLeftTree->getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
-    }
-    if (botRightTree != nullptr) {
-        botRightTree->getNodesInBoundaryHelper(nodes, x1, y1, x2, y2);
-    }
+    return tmp->value;
 }
 
-void Quad::showEast() const{
-    double x1 = botLeft.x;  // Î÷±ß½ç
-    double y1 = topRight.y; // ±±±ß½ç
-    double x2 = topRight.x; // ¶«±ß½ç
-    double y2 = botLeft.y;  // ÄÏ±ß½ç
-    auto result = getNodesInBoundary(x2 - (x2 - x1) / 2.0, y1, x2, y2);
-    cout << "¶«±ßÓĞ" << result.size() << "¸ö½Úµã" << endl;
-    for (Node* node : result){
-        cout << "¶«±ß½Úµã£º" << node->data->id << endl;
+vector<Point *> QuadTree::findFirstSouthEastPoints() const {
+    auto tmp = this;
+    while(true){
+        if (!tmp->se->isLeaf()){
+            tmp = tmp->se;
+        }else if (!tmp->sw->isLeaf()){
+            tmp = tmp->sw;
+        }else if (!tmp->ne->isLeaf()){
+            tmp = tmp->ne;
+        }else if (!tmp->nw->isLeaf()){
+            tmp = tmp->nw;
+        }else{
+            if (!tmp->se->value.empty()){
+                tmp = tmp->se;
+            }else if (!tmp->sw->value.empty()){
+                tmp = tmp->sw;
+            }else if (!tmp->ne->value.empty()){
+                tmp = tmp->ne;
+            }else if (!tmp->nw->value.empty()){
+                tmp = tmp->nw;
+            }else{
+                return tmp->value;
+            }
+            break;
+        }
     }
+    return tmp->value;
 }
-// ÏÔÊ¾ÄÏ²à½Úµã
-void Quad::showSouth() const{
-    double x1 = botLeft.x;  // Î÷±ß½ç
-    double y1 = topRight.y; // ±±±ß½ç
-    double x2 = topRight.x; // ¶«±ß½ç
-    double y2 = botLeft.y;  // ÄÏ±ß½ç
-    auto result = getNodesInBoundary(x1, y2 + (y1 - y2) / 2.0, x2, y2);
-    cout << "ÄÏ±ßÓĞ" << result.size() << "¸ö½Úµã" << endl;
-    for (Node* node : result){
-        cout << "ÄÏ±ß½Úµã£º" << node->data->id << endl;
+
+vector<Point *> QuadTree::findNorthWestPointsOnEast() const {
+    auto tmp = this;
+    while(true){
+        if (!tmp->nw->isLeaf()){
+            tmp = tmp->nw;
+        }else if (!tmp->ne->isLeaf()){
+            tmp = tmp->ne;
+        }else if (!tmp->sw->isLeaf()){
+            tmp = tmp->sw;
+        }else if (!tmp->se->isLeaf()){
+            tmp = tmp->se;
+        }else{
+            tmp = tmp->ne;
+            break;
+        }
     }
+    return tmp->value;
+}
+
+vector<Point *> QuadTree::findNorthWestPointsOnSouth() const {
+    auto tmp = this;
+    while(true){
+        if (!tmp->nw->isLeaf()){
+            tmp = tmp->nw;
+        }else if (!tmp->ne->isLeaf()){
+            tmp = tmp->ne;
+        }else if (!tmp->sw->isLeaf()){
+            tmp = tmp->sw;
+        }else if (!tmp->se->isLeaf()){
+            tmp = tmp->se;
+        }else{
+            tmp = tmp->sw;
+            break;
+        }
+    }
+    return tmp->value;
+}
+
+vector<Point *> QuadTree::findSouthEastPointsOnNorthWest() const {
+    auto tmp = this;
+    while(true){
+        if (!tmp->se->isLeaf()){
+            tmp = tmp->se;
+        }else if (!tmp->sw->isLeaf()){
+            tmp = tmp->sw;
+        }else if (!tmp->ne->isLeaf()){
+            tmp = tmp->ne;
+        }else if (!tmp->nw->isLeaf()){
+            tmp = tmp->nw;
+        }else{
+            tmp = tmp->nw;
+            break;
+        }
+    }
+    return tmp->value;
+}
+
+vector<Point *> QuadTree::findSouthEastPointsOnNorthWestOnNorth() const {
+    auto tmp = this;
+    const QuadTree* front;
+    if (!this->se->isLeaf()){
+        tmp = tmp->se;
+    }
+    while(true){
+        if (!tmp->se->isLeaf()){
+            front = tmp;
+            tmp = tmp->se;
+        }else if (!tmp->sw->isLeaf()){
+            front = tmp;
+            tmp = tmp->sw;
+        }else if (!tmp->ne->isLeaf()){
+            front = tmp;
+            tmp = tmp->ne;
+        }else if (!tmp->nw->isLeaf()){
+            front = tmp;
+            tmp = tmp->nw;
+        }else{
+            tmp = front->ne->sw;
+            break;
+        }
+    }
+    return tmp->value;
 }

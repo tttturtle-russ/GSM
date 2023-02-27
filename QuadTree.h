@@ -1,143 +1,94 @@
 //
-// Created by liuhy on 2023/2/21.
+// Created by liuhy on 2023/2/24.
 //
 
 #ifndef GSM_QUADTREE_H
 #define GSM_QUADTREE_H
+
 #include <iostream>
+#include <vector>
 #include <fstream>
 #include <sstream>
-#include <vector>
-#include <cmath>
-#include <cstdlib>
-#define MAXX 109996
-#define MAXY 39946
-#define MINX (-26)
-#define MINY (-82)
+#include <cstring>
+#include <algorithm>
 using namespace std;
-extern string InitResult;
-struct Point
-{
-    int x;
-    int y;
-    Point(int _x, int _y)
-    {
-        x = _x;
-        y = _y;
-    }
-    Point()
-    {
-        x = 0;
-        y = 0;
-    }
-    // 重载比较运算符
-    bool operator==(const Point& p) const{
-        return x == p.x && y == p.y;
-    }
 
-    double distance(Point point) const {
-        return sqrt(pow(x - point.x, 2) + pow(y - point.y, 2));
-    }
-};
+const double XMIN = -26;
+const double XMAX = 109996;
+const double YMIN = -82;
+const double YMAX = 39946;
+
 typedef struct base_station{
-    Point p;
     int id;
     float power;
     string type;
-    base_station(Point _p, int _id,float _power,string _type){
-        p = _p;
+    base_station(int _id,float _power,string _type){
         id = _id;
         power = _power;
         type = _type;
     }
-    double distance(Point _p);
-    bool isPowerful(base_station *b,Point p);
 }base;
 
-typedef struct fake_station{
-    Point s_point,e_point;
-    int speed,id;
-    int start,duration;
-    string type;
-    fake_station(Point s_p,Point e_p,int _speed,int _id,int _start,int _duration,string _type){
-        s_point = s_p;
-        e_point = e_p;
-        speed = _speed;
-        id = _id;
-        start = _start;
-        duration = _duration;
-        type = _type;
+struct Point {
+    double x,y;
+    base* value;
+    Point(double _x,double _y) : x(_x),y(_y){}
+    Point(double _x,double _y,base* v) : x(_x),y(_y),value(v){}
+    bool operator == (const Point& p) const{
+        return this->x == p.x && this->y == p.y;
     }
-}fake;
-
-typedef struct mobile {
-    int xs,ys,xe,ye;
-    int speed;
-    int start_hour,start_min;
-}mobile;
-
-
-struct Node
-{
-    Point pos;
-    base *data;
-    Node(Point _pos, base *_data)
-    {
-        pos = _pos;
-        data = _data;
-    }
-    Node() {
-        data = nullptr;
-    }
-    bool inBoundary(double x1, double y1, double x2, double y2) const;
 };
 
+class QuadTree {
+    const int POINT_CAPACITY = 10;
+    int x, y; // 当前节点所表示的矩形区域的左下角坐标
+    int w, h; // 当前节点所表示的矩形区域的宽度和高度
+    vector<Point*> value; // 当前节点存储的值
+    QuadTree* nw; // 左上子节点
+    QuadTree* ne; // 右上子节点
+    QuadTree* sw; // 左下子节点
+    QuadTree* se; // 右下子节点
 
-class Quad
-{
-    // 范围
-    Point botLeft;
-    Point topRight;
-    // 根节点
-    Node *n;
-    // 子结点
-    Quad *topLeftTree;
-    Quad *topRightTree;
-    Quad *botLeftTree;
-    Quad *botRightTree;
-    void subdivide() {
-        Point mid = Point((botLeft.x + topRight.x)/2, (topRight.y + botLeft.y)/2);
-        topLeftTree = new Quad(botLeft, mid);
-        topRightTree = new Quad(Point(mid.x, botLeft.y), Point(topRight.x, mid.y));
-        botLeftTree = new Quad(Point(botLeft.x, mid.y), Point(mid.x, topRight.y));
-        botRightTree = new Quad(mid, topRight);
+    bool isLeaf() const {
+        return nw == nullptr && ne == nullptr && sw == nullptr && se == nullptr;
     }
+
+    void subdivide() {
+        nw = new QuadTree(x, y + h / 2, w / 2, h / 2);
+        ne = new QuadTree(x + w / 2, y + h / 2, w / 2, h / 2);
+        sw = new QuadTree(x, y, w / 2, h / 2);
+        se = new QuadTree(x + w / 2, y, w / 2, h / 2);
+    }
+
 public:
-    Quad(Point _botLeft, Point _topRight);
-    Quad();
-    ~Quad();
-    //插入
-    void insert(Node*);
-    //搜索
-    Node* search(Point);
-    //碰撞
-    bool inBoundary(Point) const;
-    bool inBoundary(Point p, double radius) const;
-    bool inBoundary(double x1,double y1,double x2,double y2) const;
-    // 初始化
-    bool init();
-    // 查找给定点周围半径的所有节点
-    void searchNearbyNodes(Point p, double radius, vector<Node *> &vector1);
-    void clear();
-    // 查找最强基站
-    base *findMostPowerfulBase(Point,double radius = 10000);
-    // 显示西北角和东南角区域中的基站数据
-    void showBotRight() const;
-    void getNodesInBoundaryHelper(vector<Node *> &nodes, double x1, double y1, double x2, double y2) const;
-    vector<Node *> getNodesInBoundary(double d, double d1, double d2, double d3) const;
-    void showTopLeft() const;
-    void showEast() const;
-    void showSouth() const;
+    QuadTree(int x, int y, int w, int h) : x(x), y(y), w(w), h(h), value(0), nw(nullptr), ne(nullptr), sw(nullptr), se(nullptr){}
+
+    ~QuadTree() {
+        delete nw;
+        delete ne;
+        delete sw;
+        delete se;
+    }
+
+    void insert(Point*p) ;
+
+    Point* query(const Point& p) const;
+    string init();
+
+    bool intersects(double rx, double ry, double rw, double rh) const;
+
+    // 查询第一个有节点的西北角区域 (task 1)
+    vector<Point *> findFirstNorthWestPoints() const;
+    // 查询第一个有节点的东南角区域 (task 1)
+    vector<Point *> findFirstSouthEastPoints() const;
+    // 查询第一个有节点的西北角区域的东边区域 (task 2)
+    vector<Point *> findNorthWestPointsOnEast() const;
+    // 查询第一个有节点的西北角区域的南边区域 (task 2)
+    vector<Point *> findNorthWestPointsOnSouth() const;
+    // 查询第一个有节点的东南角区域的西北边区域 (task 2)
+    vector<Point *> findSouthEastPointsOnNorthWest() const;
+    // 查询第一个有节点的东南角区域的西北边区域的北侧区域 (task 2)
+    vector<Point *> findSouthEastPointsOnNorthWestOnNorth() const;
 };
 
 #endif //GSM_QUADTREE_H
