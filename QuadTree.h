@@ -76,7 +76,7 @@ struct Point {
         double result = 0;
         if (p.value->type == "城区"){
             double dis = this->distance(p);
-            result = p.value->power * pow((200.0/dis),2);
+            result = p.value->power * pow((300.0/dis),2);
         }else if (p.value->type == "乡镇"){
             double dis = this->distance(p);
             result = p.value->power * pow((1000.0/dis),2);
@@ -142,7 +142,7 @@ public:
     // 查询第一个有节点的东南角区域的西北边区域的北侧区域 (task 2)
     [[nodiscard]] vector<Point *> findSouthEastPointsOnNorthWestOnNorth() const;
 
-    vector<Point *> searchNearbyPoints(const Point& p,double r = 5000) const;
+    vector<Point *> searchNearbyPoints(const Point& p,double r = 10000) const;
 
     Point* findNearestPoint(const Point& p) const;
 

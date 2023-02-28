@@ -5,7 +5,6 @@ using namespace std;
 int main() {
     auto q = new QuadTree(XMIN, YMIN, XMAX - XMIN, YMAX - YMIN);
     cout << q->init() << endl;
-
 //    auto r1 = q->findFirstNorthWestPoints();
 //    auto r2 = q->findFirstSouthEastPoints();
 //    cout << "西北角第一个区域节点有" << r1.size() << "个" << endl;
@@ -31,5 +30,5 @@ int main() {
 //    for (const auto &item: r6)
 //        cout << "x : " << item->x << "    y : "<< item->y << "    id : "<< item->value->id << endl;
     auto p = Point(3680,36900);
-    q->findMostPowerfulPoint(p);
+    q->showResult();
 }

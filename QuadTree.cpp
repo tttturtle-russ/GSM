@@ -325,59 +325,44 @@ Point* QuadTree::findMostPowerfulPoint(Point& p) const{
 
 //轨迹移动
 void QuadTree::checkMove(mobile m) const {
-    double step = 20; // 步长
+    double step = 10; // 步长
+    double cos = m.getCos();
+    double sin = m.getSin();
+    double dis = m.distance();
     int timer = 0; // 计时器
-    bool hasConnected = false;
-    Point *front = nullptr;
+    Point p = Point(m.xs, m.ys);
+    Point *cur = nullptr; // 当前连接的基站
+    Point *front = nullptr; // 前一个连接的基站
+    auto t = new tm;
     string buf;
-    buf.resize(100);
-    while(step * timer < m.distance()){
-        // 每次移动10米
-        Point p = Point(m.xs + step * timer * m.getCos(), m.ys + step * timer * m.getSin());
-        auto cur = findMostPowerfulPoint(p);
+    buf.resize(11);
+    while(step * timer < dis){
+        cur = findMostPowerfulPoint(p);
+        while (cur == nullptr && step * timer < dis){
+            timer++;
+            p.x += step * cos;
+            p.y += step * sin;
+            cur = findMostPowerfulPoint(p);
+        }
+        if (cur == nullptr)
+            break;
         double time = step * timer / (m.speed * 50 / 3);
-        auto *t = new tm;
-        double power;
-        if (cur == nullptr){
-            if (hasConnected){
-                int sec = (time - int(time)) * 60;
-                if (time + m.start_min > 60) {
-                    t->tm_hour = m.start_hour + 1;
-                    t->tm_min = int(time + m.start_min - 60);
-                    t->tm_sec = sec;
-                    strftime(&buf[0], buf.size(), "[%H:%M:%S]", t);
-                    cout << buf << "\t与" << front->value->id << "号基站断开连接，相对信号强度" << power <<endl;
-                }else{
-                    t->tm_hour = m.start_hour;
-                    t->tm_min = int(time + m.start_min);
-                    t->tm_sec = sec;
-                    strftime(&buf[0], buf.size(), "[%H:%M:%S]", t);
-                    cout << buf << "\t与" << front->value->id << "号基站断开连接，相对信号强度" << power << endl;
-                }
-                hasConnected = false;
-            }
+        if(time + m.start_min >= 60){
+            t->tm_hour = m.start_hour + (time + m.start_min) / 60; //小时进位
+            t->tm_min = int(time + m.start_min) % 60; //分钟进位，会丢失精度
         }else{
-            if (!hasConnected){
-                power = p.calculateEquivalentIntensity(*cur);
-                int sec = (time - int(time)) * 60;
-                if (time + m.start_min > 60) {
-                    t->tm_hour = m.start_hour + 1;
-                    t->tm_min = int(time + m.start_min - 60);
-                    t->tm_sec = sec;
-                    strftime(&buf[0], buf.size(), "[%H:%M:%S]", t);
-                    cout << buf << "\t与" << cur->value->id << "号基站成功连接，相对信号强度" << power << endl;
-                }else{
-                    t->tm_hour = m.start_hour;
-                    t->tm_min = int(time + m.start_min);
-                    t->tm_sec = sec;
-                    strftime(&buf[0], buf.size(), "[%H:%M:%S]", t);
-                    cout << buf << "\t与" << cur->value->id << "号基站成功连接，相对信号强度" << power << endl;
-                }
-                hasConnected = true;
-                front = cur;
-            }
+            t->tm_hour = m.start_hour;
+            t->tm_min = int(time + m.start_min) % 60;
+        }
+        t->tm_sec = (time - int(time)) * 60;
+        strftime(&buf[0], buf.size(), "[%H:%M:%S]", t);
+        if (front != cur){
+            front = cur;
+            cout << buf << "\t与" << cur->value->id << "建立连接" << endl;
         }
         timer++;
+        p.x += step * cos;
+        p.y += step * sin;
     }
 }
 

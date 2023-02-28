@@ -26,8 +26,6 @@ Point *Point::getMaxPowerPoint(const vector<Point *>& p){
     double ePower = 0;
     for (int i = 0; i < p.size(); ++i) {
         double tmp = this->calculateEquivalentIntensity(*p[i]);
-        if (p[i]->value->id == 1913)
-            cout << "1913 at" << i << endl;
         if (isinf(tmp)){
             return p[i];
         }
@@ -36,7 +34,7 @@ Point *Point::getMaxPowerPoint(const vector<Point *>& p){
             index = i;
         }
     }
-    if (ePower <= 0.999999999){
+    if (ePower <= 0.999999){
         return nullptr;
     }
     return p[index];
