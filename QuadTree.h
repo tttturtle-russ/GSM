@@ -11,6 +11,7 @@
 #include <sstream>
 #include <cstring>
 #include <algorithm>
+#include <cmath>
 using namespace std;
 
 const double XMIN = -26;
@@ -29,25 +30,74 @@ typedef struct base_station{
     }
 }base;
 
+typedef struct mobile_station{
+    int xs,ys,xe,ye;
+    int speed;
+    int start_hour,start_min;
+    mobile_station(int _xs,int _ys,int _xe,int _ye,int _speed,int _start_hour,int _start_min){
+        xs = _xs;
+        ys = _ys;
+        xe = _xe;
+        ye = _ye;
+        speed = _speed;
+        start_hour = _start_hour;
+        start_min = _start_min;
+    }
+
+    double distance() {
+        return sqrt(pow((xe - xs),2) + pow((ye - ys),2));
+    }
+    double getSin();
+    double getCos();
+}mobile;
+
+vector<mobile_station *> getMobileInfo();
+
 struct Point {
     double x,y;
     base* value;
     Point(double _x,double _y) : x(_x),y(_y){}
     Point(double _x,double _y,base* v) : x(_x),y(_y),value(v){}
+    // ÖØÔØ==
     bool operator == (const Point& p) const{
         return this->x == p.x && this->y == p.y;
     }
+    // ÖØÔØ<<
+    friend ostream& operator << (ostream& os, const Point* p){
+        os << p->x << "," << p->y << "," << p->value->id << "," << p->value->power << "," << p->value->type;
+        return os;
+    }
+    double distance(const Point &p);
+    Point *getMinDistancePoint(const vector<Point *> &p) const;
+    Point *getMaxPowerPoint(const vector<Point *>& vector1) ;
+    Point *getOnlyPoint(const vector<Point *>& p);
+    // ¼ÆËãµÈĞ§Ç¿¶È
+    double calculateEquivalentIntensity(const Point p) {
+        double result = 0;
+        if (p.value->type == "³ÇÇø"){
+            double dis = this->distance(p);
+            result = p.value->power * pow((200.0/dis),2);
+        }else if (p.value->type == "ÏçÕò"){
+            double dis = this->distance(p);
+            result = p.value->power * pow((1000.0/dis),2);
+        }else if (p.value->type == "¸ßËÙ") {
+            double dis = this->distance(p);
+            result = p.value->power * pow((5000.0/dis),2);
+        }
+        return result;
+    };
+
 };
 
 class QuadTree {
     const int POINT_CAPACITY = 10;
-    int x, y; // å½“å‰èŠ‚ç‚¹æ‰€è¡¨ç¤ºçš„çŸ©å½¢åŒºåŸŸçš„å·¦ä¸‹è§’åæ ‡
-    int w, h; // å½“å‰èŠ‚ç‚¹æ‰€è¡¨ç¤ºçš„çŸ©å½¢åŒºåŸŸçš„å®½åº¦å’Œé«˜åº¦
-    vector<Point*> value; // å½“å‰èŠ‚ç‚¹å­˜å‚¨çš„å€¼
-    QuadTree* nw; // å·¦ä¸Šå­èŠ‚ç‚¹
-    QuadTree* ne; // å³ä¸Šå­èŠ‚ç‚¹
-    QuadTree* sw; // å·¦ä¸‹å­èŠ‚ç‚¹
-    QuadTree* se; // å³ä¸‹å­èŠ‚ç‚¹
+    float x, y; // µ±Ç°½ÚµãËù±íÊ¾µÄ¾ØĞÎÇøÓòµÄ×óÏÂ½Ç×ø±ê
+    float w, h; // µ±Ç°½ÚµãËù±íÊ¾µÄ¾ØĞÎÇøÓòµÄ¿í¶ÈºÍ¸ß¶È
+    vector<Point*> value; // µ±Ç°½Úµã´æ´¢µÄÖµ
+    QuadTree* nw; // ×óÉÏ×Ó½Úµã
+    QuadTree* ne; // ÓÒÉÏ×Ó½Úµã
+    QuadTree* sw; // ×óÏÂ×Ó½Úµã
+    QuadTree* se; // ÓÒÏÂ×Ó½Úµã
 
     bool isLeaf() const {
         return nw == nullptr && ne == nullptr && sw == nullptr && se == nullptr;
@@ -60,6 +110,7 @@ class QuadTree {
         se = new QuadTree(x + w / 2, y, w / 2, h / 2);
     }
 
+    void checkMove(mobile m) const;
 public:
     QuadTree(int x, int y, int w, int h) : x(x), y(y), w(w), h(h), value(0), nw(nullptr), ne(nullptr), sw(nullptr), se(nullptr){}
 
@@ -72,23 +123,32 @@ public:
 
     void insert(Point*p) ;
 
-    Point* query(const Point& p) const;
+    [[nodiscard]] Point* query(const Point& p) const;
+
     string init();
 
     bool intersects(double rx, double ry, double rw, double rh) const;
 
-    // æŸ¥è¯¢ç¬¬ä¸€ä¸ªæœ‰èŠ‚ç‚¹çš„è¥¿åŒ—è§’åŒºåŸŸ (task 1)
-    vector<Point *> findFirstNorthWestPoints() const;
-    // æŸ¥è¯¢ç¬¬ä¸€ä¸ªæœ‰èŠ‚ç‚¹çš„ä¸œå—è§’åŒºåŸŸ (task 1)
-    vector<Point *> findFirstSouthEastPoints() const;
-    // æŸ¥è¯¢ç¬¬ä¸€ä¸ªæœ‰èŠ‚ç‚¹çš„è¥¿åŒ—è§’åŒºåŸŸçš„ä¸œè¾¹åŒºåŸŸ (task 2)
-    vector<Point *> findNorthWestPointsOnEast() const;
-    // æŸ¥è¯¢ç¬¬ä¸€ä¸ªæœ‰èŠ‚ç‚¹çš„è¥¿åŒ—è§’åŒºåŸŸçš„å—è¾¹åŒºåŸŸ (task 2)
-    vector<Point *> findNorthWestPointsOnSouth() const;
-    // æŸ¥è¯¢ç¬¬ä¸€ä¸ªæœ‰èŠ‚ç‚¹çš„ä¸œå—è§’åŒºåŸŸçš„è¥¿åŒ—è¾¹åŒºåŸŸ (task 2)
-    vector<Point *> findSouthEastPointsOnNorthWest() const;
-    // æŸ¥è¯¢ç¬¬ä¸€ä¸ªæœ‰èŠ‚ç‚¹çš„ä¸œå—è§’åŒºåŸŸçš„è¥¿åŒ—è¾¹åŒºåŸŸçš„åŒ—ä¾§åŒºåŸŸ (task 2)
-    vector<Point *> findSouthEastPointsOnNorthWestOnNorth() const;
+    // ²éÑ¯µÚÒ»¸öÓĞ½ÚµãµÄÎ÷±±½ÇÇøÓò (task 1)
+    [[nodiscard]] vector<Point *> findFirstNorthWestPoints() const;
+    // ²éÑ¯µÚÒ»¸öÓĞ½ÚµãµÄ¶«ÄÏ½ÇÇøÓò (task 1)
+    [[nodiscard]] vector<Point *> findFirstSouthEastPoints() const;
+    // ²éÑ¯µÚÒ»¸öÓĞ½ÚµãµÄÎ÷±±½ÇÇøÓòµÄ¶«±ßÇøÓò (task 2)
+    [[nodiscard]] vector<Point *> findNorthWestPointsOnEast() const;
+    // ²éÑ¯µÚÒ»¸öÓĞ½ÚµãµÄÎ÷±±½ÇÇøÓòµÄÄÏ±ßÇøÓò (task 2)
+    [[nodiscard]] vector<Point *> findNorthWestPointsOnSouth() const;
+    // ²éÑ¯µÚÒ»¸öÓĞ½ÚµãµÄ¶«ÄÏ½ÇÇøÓòµÄÎ÷±±±ßÇøÓò (task 2)
+    [[nodiscard]] vector<Point *> findSouthEastPointsOnNorthWest() const;
+    // ²éÑ¯µÚÒ»¸öÓĞ½ÚµãµÄ¶«ÄÏ½ÇÇøÓòµÄÎ÷±±±ßÇøÓòµÄ±±²àÇøÓò (task 2)
+    [[nodiscard]] vector<Point *> findSouthEastPointsOnNorthWestOnNorth() const;
+
+    vector<Point *> searchNearbyPoints(const Point& p,double r = 5000) const;
+
+    Point* findNearestPoint(const Point& p) const;
+
+    Point *findMostPowerfulPoint(Point& p) const;
+
+    void showResult() const;
 };
 
 #endif //GSM_QUADTREE_H

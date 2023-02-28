@@ -55,8 +55,8 @@ build CMakeFiles/GSM.dir/main.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/GSM/
   OBJECT_DIR = CMakeFiles\GSM.dir
   OBJECT_FILE_DIR = CMakeFiles\GSM.dir
 
-build CMakeFiles/GSM.dir/util.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/GSM/util.cpp || cmake_object_order_depends_target_GSM
-  DEP_FILE = CMakeFiles\GSM.dir\util.cpp.obj.d
+build CMakeFiles/GSM.dir/point.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/GSM/point.cpp || cmake_object_order_depends_target_GSM
+  DEP_FILE = CMakeFiles\GSM.dir\point.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\GSM.dir
   OBJECT_FILE_DIR = CMakeFiles\GSM.dir
@@ -75,7 +75,7 @@ build CMakeFiles/GSM.dir/QuadTree.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/
 #############################################
 # Link the executable GSM.exe
 
-build GSM.exe: CXX_EXECUTABLE_LINKER__GSM_Debug CMakeFiles/GSM.dir/main.cpp.obj CMakeFiles/GSM.dir/util.cpp.obj CMakeFiles/GSM.dir/QuadTree.cpp.obj
+build GSM.exe: CXX_EXECUTABLE_LINKER__GSM_Debug CMakeFiles/GSM.dir/main.cpp.obj CMakeFiles/GSM.dir/point.cpp.obj CMakeFiles/GSM.dir/QuadTree.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\GSM.dir
