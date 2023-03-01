@@ -30,6 +30,5 @@ int main() {
 //    for (const auto &item: r6)
 //        cout << "x : " << item->x << "    y : "<< item->y << "    id : "<< item->value->id << endl;
     //q->showResult();
-    q->advancedTask1();
-
+    q->extendTask2();
 }

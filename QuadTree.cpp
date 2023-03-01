@@ -2,6 +2,7 @@
 // Created by liuhy on 2023/2/24.
 //
 
+#include <memory>
 #include "QuadTree.h"
 
 
@@ -345,7 +346,7 @@ void QuadTree::checkMove(mobile m) const {
         if (pre != cur){
             pre = cur;
             p.enterIterateCalculate(cur,pre,cos,sin);
-            double time = p.distance(Point(m.xs,m.ys)) / (m.speed * 50 / 3);
+            double time = p.distance(Point(m.xs,m.ys)) / (double(m.speed) * 50 / 3);
             timeStamp = getTimeStamp(time, m,t);
             // 格式化字符串
             cout << timeStamp << "\t与" << cur->value->id << "建立连接" << endl;
@@ -354,9 +355,9 @@ void QuadTree::checkMove(mobile m) const {
                 p.x += step * cos;
                 p.y += step * sin;
                 cur = findMostPowerfulPoint(p);
-                if (cur == nullptr){
-                    p.outIterateCalculate(cur,pre,cos,sin);
-                    double time = p.distance(Point(m.xs,m.ys)) / (m.speed * 50 / 3);
+                if (cur == nullptr || cur != pre){
+                    p.outIterateCalculate(pre,cos,sin);
+                    double time = p.distance(Point(m.xs,m.ys)) / (double(m.speed) * 50 / 3);
                     timeStamp = getTimeStamp(time, m,t);
                     cout << timeStamp << "\t与" << pre->value->id << "断开连接" << endl;
                     break;
@@ -369,17 +370,17 @@ void QuadTree::checkMove(mobile m) const {
     }
 }
 
-void QuadTree::checkOverlap(mobile m) const {
+void QuadTree::checkOverlap(mobile m) const{
     double step = 10; // 步长
     double cos = m.getCos();
     double sin = m.getSin();
     double dis = m.distance();
     int timer = 0; // 计时器
     Point p = Point(m.xs, m.ys);
-    Point *start_point = new Point();
-    Point *end_point = new Point();
     Point *cur = nullptr; // 当前连接的基站
     Point *pre = nullptr; // 前一个连接的基站
+    auto *start_point = new Point();
+    auto *end_point = new Point();
     auto preTime = new tm;
     auto curTime = new tm;
     string preTimeStamp(11, '0');
@@ -394,27 +395,20 @@ void QuadTree::checkOverlap(mobile m) const {
     if (cur == nullptr)
         return;
     pre = cur;
-    while(p.calculateEquivalentIntensity(*cur) > 0.999999 && p.calculateEquivalentIntensity(*pre) > 0.999999){
-        if (step * timer >= dis)
-            break;
-        if (cur != pre){
-            break;
-        }
+    while (pre == cur){
         timer++;
         p.x += step * cos;
         p.y += step * sin;
         cur = findMostPowerfulPoint(p);
-        if (cur == nullptr)
-            break;
     }
     Point tmp = Point(m.xs, m.ys);
-    while(tmp.calculateEquivalentIntensity(*cur) <= 0.999999 || tmp.calculateEquivalentIntensity(*pre) <= 0.999999){
+    while(!tmp.isValid(*cur) || !tmp.isValid(*pre)){
         tmp.x += step * cos;
         tmp.y += step * sin;
     }
     start_point->x = tmp.x;
     start_point->y = tmp.y;
-    while(tmp.calculateEquivalentIntensity(*cur) > 0.999999 && tmp.calculateEquivalentIntensity(*pre) > 0.999999){
+    while(tmp.isValid(*cur) && tmp.isValid(*pre)){
         tmp.x += step * cos;
         tmp.y += step * sin;
     }
@@ -423,15 +417,22 @@ void QuadTree::checkOverlap(mobile m) const {
     // 迭代求得精确坐标,误差0.1m
     start_point->enterIterateCalculate(cur,pre,cos,sin);
     end_point->outIterateCalculate(cur,pre,cos,sin);
-    double time1 = start_point->distance(Point(m.xs, m.ys)) / (m.speed * 50 / 3);
-    double time2 = end_point->distance(Point(m.xs, m.ys)) / (m.speed * 50 / 3);
-    double time = start_point->distance(*end_point) / (double(m.speed) * 1000.0 / 3600.0);
+    double time1 = start_point->distance(Point(m.xs, m.ys)) / (double(m.speed) * 50 / 3);
+    // 7.242773428
+    double time2 = end_point->distance(Point(m.xs, m.ys)) / (double(m.speed) * 50 / 3);
+    // 7.799414063
+    double time = (time2 - time1) * 60;
     preTimeStamp = getTimeStamp(time1, m, preTime);
     curTimeStamp = getTimeStamp(time2, m, curTime);
     cout << preTimeStamp << "\t进入" << pre->value->id << "与" << cur->value->id << "的重叠区域" << endl;
     cout << curTimeStamp << "\t离开" << pre->value->id << "与" << cur->value->id << "的重叠区域" << endl;
     cout << time << "秒" << endl;
+    delete start_point;
+    delete end_point;
+    delete preTime;
+    delete curTime;
 }
+
 
 void QuadTree::checkConnectToFake(mobile m,const vector<fake_station *>& f) const{
     double timer = 0;

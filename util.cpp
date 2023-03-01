@@ -145,9 +145,9 @@ void Point::enterIterateCalculate(Point* cur,Point* pre,double cos,double sin,in
     double pre_y = _y - step * sin;
     double mid_x = (_x + pre_x) / 2;
     double mid_y = (_y + pre_y) / 2;
-    Point* mid = new Point(mid_x, mid_y);
-    while(fabs(_x - pre_x) > precision || fabs(_y - pre_y) > precision){
-        if (mid->calculateEquivalentIntensity(*pre) > 0.999999 && mid->calculateEquivalentIntensity(*cur) > 0.999999){
+    auto* mid = new Point(mid_x, mid_y);
+    while(fabs(_x - pre_x) >= precision || fabs(_y - pre_y) >= precision){
+        if (mid->isValid(*cur) && mid->isValid(*pre)){
             _x = mid->x;
             _y = mid->y;
         }else{
@@ -159,6 +159,7 @@ void Point::enterIterateCalculate(Point* cur,Point* pre,double cos,double sin,in
     }
     this->x = mid->x;
     this->y = mid->y;
+    delete mid;
 }
 
 void Point::outIterateCalculate(Point* cur,Point* pre,double cos,double sin,int step,double precision){
@@ -168,9 +169,9 @@ void Point::outIterateCalculate(Point* cur,Point* pre,double cos,double sin,int 
     double pre_y = _y - step * sin;
     double mid_x = (_x + pre_x) / 2;
     double mid_y = (_y + pre_y) / 2;
-    Point* mid = new Point(mid_x, mid_y);
-    while(fabs(_x - pre_x) > precision || fabs(_y - pre_y) > precision){
-        if (mid->calculateEquivalentIntensity(*cur) <= 0.999999 && mid->calculateEquivalentIntensity(*pre) <= 0.999999){
+    auto* mid = new Point(mid_x, mid_y);
+    while(fabs(_x - pre_x) >= precision || fabs(_y - pre_y) >= precision){
+        if (!mid->isValid(*cur) || !mid->isValid(*pre)){
             _x = mid->x;
             _y = mid->y;
         }else{
@@ -182,10 +183,40 @@ void Point::outIterateCalculate(Point* cur,Point* pre,double cos,double sin,int 
     }
     this->x = mid->x;
     this->y = mid->y;
+    delete mid;
 }
 
+void Point::outIterateCalculate(Point *pre, double cos, double sin, int step, double precision) {
+    double _x = this->x;
+    double _y = this->y;
+    double pre_x = _x - step * cos;
+    double pre_y = _y - step * sin;
+    double mid_x = (_x + pre_x) / 2;
+    double mid_y = (_y + pre_y) / 2;
+    auto* mid = new Point(mid_x, mid_y);
+    while(fabs(_x - pre_x) >= precision || fabs(_y - pre_y) >= precision){
+        if (!mid->isValid(*pre)){
+            _x = mid->x;
+            _y = mid->y;
+        }else{
+            pre_x = mid->x;
+            pre_y = mid->y;
+        }
+        mid->x = (_x + pre_x) / 2;
+        mid->y = (_y + pre_y) / 2;
+    }
+    this->x = mid->x;
+    this->y = mid->y;
+    delete mid;
+}
+
+bool Point::isValid(Point p) {
+    return this->calculateEquivalentIntensity(p) > 0.999999;
+}
+
+
 Point * fake::getPosition(double time,int curHour,int curMin){
-    Point * p = new Point();
+    auto * p = new Point();
     if(this->start_hour > curHour){
         p->x = this->xs;
         p->y = this->ys;

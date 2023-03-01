@@ -76,11 +76,11 @@ struct Point {
     Point *getOnlyPoint(const vector<Point *>& p);
     // 计算等效强度
     double calculateEquivalentIntensity(const Point p);
-
+    bool isValid(Point p);
     void enterIterateCalculate(Point* cur,Point* pre,double cos,double sin,int step = 10,double precision = 0.1);
-
     void outIterateCalculate(Point *cur,Point* pre, double cos, double sin, int step = 10, double precision= 0.1);
 
+    void outIterateCalculate(Point* pre,double cos,double sin,int step = 10,double precision = 0.1);
 };
 
 typedef struct fake_station{
@@ -175,6 +175,10 @@ public:
     void advancedTask1() const;
 
     void checkConnectToFake(mobile m, const vector<fake_station *> &f) const;
+
+    pair<Point *, Point *> getPower2Points(Point *p) const;
+
+    void getPower2Points(Point *p, Point *cur, Point *pre) const;
 };
 
 string getTimeStamp(double time , mobile m,tm* t);
