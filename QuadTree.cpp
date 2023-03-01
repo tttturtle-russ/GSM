@@ -7,6 +7,7 @@
 
 string QuadTree::init() {
     auto mode = std::getenv("mode");
+    string result;
     // read from ./data/*.txt and store them to QuadTree
     ifstream f1,f2,t;
     if (strcmp(mode,"release") == 0) {
@@ -27,6 +28,8 @@ string QuadTree::init() {
     // read jz001.txt
     string buf;
     vector<string > v;
+    clock_t start,end;
+    start = clock();
     // 不处理第一行和最后一行
     if (strcmp(mode,"release") == 0){
         getline(f1,buf);
@@ -46,8 +49,6 @@ string QuadTree::init() {
         }
         v.pop_back();
     }
-    cout << v.size() << endl;
-    int cnt = 0;
     for (const auto & i : v) {
         istringstream iss(i);
         vector<string> tokens;
@@ -63,13 +64,14 @@ string QuadTree::init() {
         int id = stoi(token);
         // 将上述数据插入四叉树
         insert(new Point(x,y,new base(id,power,type)));
-        cnt++;
     }
-    cout << "成功插入" << cnt << "数据" << endl;
     f1.close();
     f2.close();
     t.close();
-    return "Init Successfully";
+    end = clock();
+    result.resize(40);
+    sprintf_s(&result[0],result.size(),"Init Successfully in %d ms",end-start);
+    return result;
 }
 
 void QuadTree::insert(Point *p) {
@@ -127,12 +129,6 @@ Point *QuadTree::query(const Point &p) const {
     } else {
         return se->query(p); // 如果查询点在右下子节点所表示的矩形区域内，则递归查询右下子节点
     }
-}
-
-bool QuadTree::intersects(double rx, double ry, double rw, double rh) const {
-    double rMaxX = rx + rw;
-    double rMaxY = ry + rh;
-    return !(x > rMaxX || x + w < rx || y > rMaxY || y + h < ry);
 }
 
 vector<Point *> QuadTree::findFirstNorthWestPoints() const {
@@ -332,10 +328,10 @@ void QuadTree::checkMove(mobile m) const {
     int timer = 0; // 计时器
     Point p = Point(m.xs, m.ys);
     Point *cur = nullptr; // 当前连接的基站
-    Point *front = nullptr; // 前一个连接的基站
+    Point *pre = nullptr; // 前一个连接的基站
     auto t = new tm;
-    string buf;
-    buf.resize(11);
+    string timeStamp;
+    timeStamp.resize(11);
     while(step * timer < dis){
         cur = findMostPowerfulPoint(p);
         while (cur == nullptr && step * timer < dis){
@@ -346,19 +342,26 @@ void QuadTree::checkMove(mobile m) const {
         }
         if (cur == nullptr)
             break;
-        double time = step * timer / (m.speed * 50 / 3);
-        if(time + m.start_min >= 60){
-            t->tm_hour = m.start_hour + (time + m.start_min) / 60; //小时进位
-            t->tm_min = int(time + m.start_min) % 60; //分钟进位，会丢失精度
-        }else{
-            t->tm_hour = m.start_hour;
-            t->tm_min = int(time + m.start_min) % 60;
-        }
-        t->tm_sec = (time - int(time)) * 60;
-        strftime(&buf[0], buf.size(), "[%H:%M:%S]", t);
-        if (front != cur){
-            front = cur;
-            cout << buf << "\t与" << cur->value->id << "建立连接" << endl;
+        if (pre != cur){
+            pre = cur;
+            p.enterIterateCalculate(cur,pre,cos,sin);
+            double time = p.distance(Point(m.xs,m.ys)) / (m.speed * 50 / 3);
+            timeStamp = getTimeStamp(time, m,t);
+            // 格式化字符串
+            cout << timeStamp << "\t与" << cur->value->id << "建立连接" << endl;
+            while(step * timer < dis){
+                timer++;
+                p.x += step * cos;
+                p.y += step * sin;
+                cur = findMostPowerfulPoint(p);
+                if (cur == nullptr){
+                    p.outIterateCalculate(cur,pre,cos,sin);
+                    double time = p.distance(Point(m.xs,m.ys)) / (m.speed * 50 / 3);
+                    timeStamp = getTimeStamp(time, m,t);
+                    cout << timeStamp << "\t与" << pre->value->id << "断开连接" << endl;
+                    break;
+                }
+            }
         }
         timer++;
         p.x += step * cos;
@@ -366,8 +369,132 @@ void QuadTree::checkMove(mobile m) const {
     }
 }
 
+void QuadTree::checkOverlap(mobile m) const {
+    double step = 10; // 步长
+    double cos = m.getCos();
+    double sin = m.getSin();
+    double dis = m.distance();
+    int timer = 0; // 计时器
+    Point p = Point(m.xs, m.ys);
+    Point *start_point = new Point();
+    Point *end_point = new Point();
+    Point *cur = nullptr; // 当前连接的基站
+    Point *pre = nullptr; // 前一个连接的基站
+    auto preTime = new tm;
+    auto curTime = new tm;
+    string preTimeStamp(11, '0');
+    string curTimeStamp(11, '0');
+    cur = findMostPowerfulPoint(p);
+    while (cur == nullptr && step * timer < dis){
+        timer++;
+        p.x += step * cos;
+        p.y += step * sin;
+        cur = findMostPowerfulPoint(p);
+    }
+    if (cur == nullptr)
+        return;
+    pre = cur;
+    while(p.calculateEquivalentIntensity(*cur) > 0.999999 && p.calculateEquivalentIntensity(*pre) > 0.999999){
+        if (step * timer >= dis)
+            break;
+        if (cur != pre){
+            break;
+        }
+        timer++;
+        p.x += step * cos;
+        p.y += step * sin;
+        cur = findMostPowerfulPoint(p);
+        if (cur == nullptr)
+            break;
+    }
+    Point tmp = Point(m.xs, m.ys);
+    while(tmp.calculateEquivalentIntensity(*cur) <= 0.999999 || tmp.calculateEquivalentIntensity(*pre) <= 0.999999){
+        tmp.x += step * cos;
+        tmp.y += step * sin;
+    }
+    start_point->x = tmp.x;
+    start_point->y = tmp.y;
+    while(tmp.calculateEquivalentIntensity(*cur) > 0.999999 && tmp.calculateEquivalentIntensity(*pre) > 0.999999){
+        tmp.x += step * cos;
+        tmp.y += step * sin;
+    }
+    end_point->x = tmp.x;
+    end_point->y = tmp.y;
+    // 迭代求得精确坐标,误差0.1m
+    start_point->enterIterateCalculate(cur,pre,cos,sin);
+    end_point->outIterateCalculate(cur,pre,cos,sin);
+    double time1 = start_point->distance(Point(m.xs, m.ys)) / (m.speed * 50 / 3);
+    double time2 = end_point->distance(Point(m.xs, m.ys)) / (m.speed * 50 / 3);
+    double time = start_point->distance(*end_point) / (double(m.speed) * 1000.0 / 3600.0);
+    preTimeStamp = getTimeStamp(time1, m, preTime);
+    curTimeStamp = getTimeStamp(time2, m, curTime);
+    cout << preTimeStamp << "\t进入" << pre->value->id << "与" << cur->value->id << "的重叠区域" << endl;
+    cout << curTimeStamp << "\t离开" << pre->value->id << "与" << cur->value->id << "的重叠区域" << endl;
+    cout << time << "秒" << endl;
+}
+
+void QuadTree::checkConnectToFake(mobile m,const vector<fake_station *>& f) const{
+    double timer = 0;
+    Point p = Point(m.xs, m.ys);
+    int curHour = m.start_hour;
+    int curMinute = m.start_min;
+    int curSecond = 0;
+    while(timer <= m.distance() / (double (m.speed) * 1000/ 3600)){
+        for (const auto &item: f)
+        {
+            auto tmp = item->getPosition(timer,curHour,curMinute);
+            if (tmp->distance(p) <= 40){
+                string timeStamp(11, '\0');
+                auto t = new tm;
+                timeStamp = getTimeStamp(timer/60,m,t);
+                cout << timeStamp << "\t与" << item->id << "号伪基站建立连接" << endl;
+            }
+        }
+        timer++;
+        if (curSecond + timer >= 60){
+            curSecond = curSecond + int(timer) - 60;
+            curMinute++;
+            if (curMinute >= 60){
+                curMinute = 0;
+                curHour++;
+            }
+        }
+    }
+}
+
 void QuadTree::showResult() const {
-    auto m = getMobileInfo();
+    auto m = readMobileInfo();
     for (const auto& item: m)
         checkMove(*item);
+}
+
+void QuadTree::extendTask2() const {
+    auto m = readMobileInfo();
+    checkOverlap(*m[2]);
+    checkOverlap(*m[5]);
+}
+
+
+// 升级功能1
+void QuadTree::advancedTask1() const {
+    auto f = readFakeInfo();
+    auto m = readMobileInfo();
+    checkConnectToFake(*m[11],f);
+}
+
+
+
+string getTimeStamp(double time, mobile m,tm* t){
+    string timeStamp(11, '\0');
+    if(time + m.start_min >= 60){
+        t->tm_hour = m.start_hour + (time + m.start_min) / 60; //小时进位
+        t->tm_min = int(time + m.start_min) % 60; //分钟进位，会丢失精度
+        t->tm_sec = (time + m.start_min - int(time + m.start_min)) * 60; //秒数进位，会丢失精度
+    }else{
+        t->tm_hour = m.start_hour;
+        t->tm_min = int(time + m.start_min) % 60;
+        t->tm_sec = (time + m.start_min - int(time + m.start_min)) * 60;
+    }
+    strftime(&timeStamp[0], timeStamp.size(), "[%H:%M:%S]", t);
+    return timeStamp;
 }

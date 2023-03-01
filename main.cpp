@@ -29,6 +29,7 @@ int main() {
 //    cout << "东南角第一个区域的西北侧的北侧节点有" << r6.size() << "个" << endl;
 //    for (const auto &item: r6)
 //        cout << "x : " << item->x << "    y : "<< item->y << "    id : "<< item->value->id << endl;
-    auto p = Point(3680,36900);
-    q->showResult();
+    //q->showResult();
+    q->advancedTask1();
+
 }

@@ -3,4 +3,4 @@ project(GSM CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(GSM main.cpp point.cpp point.h QuadTree.cpp QuadTree.h)
+add_executable(GSM main.cpp util.cpp util.h QuadTree.cpp QuadTree.h)
