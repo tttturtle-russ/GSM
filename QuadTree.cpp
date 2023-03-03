@@ -2,15 +2,14 @@
 // Created by liuhy on 2023/2/24.
 //
 
-#include <memory>
 #include "QuadTree.h"
-
-
+#include "util.h"
 string QuadTree::init() {
     auto mode = std::getenv("mode");
     string result;
     // read from ./data/*.txt and store them to QuadTree
     ifstream f1,f2,t;
+    // release 环境和 debug 环境
     if (strcmp(mode,"release") == 0) {
         cout << "release mode" << endl;
         f1.open("./data/jz001.txt", ios::in);
@@ -51,14 +50,15 @@ string QuadTree::init() {
         v.pop_back();
     }
     for (const auto & i : v) {
+        // 解析数据，并绑定到结构体中
         istringstream iss(i);
         vector<string> tokens;
         string token,type,p;
         while (std::getline(iss, token, ',')) {
             tokens.push_back(token);
         }
-        float x = stof(tokens[0]);
-        float y = stof(tokens[1]);
+        double x = stod(tokens[0]);
+        double y = stod(tokens[1]);
         istringstream ss(tokens[2]);
         ss >> type >> p;
         float power = stof(p);
@@ -71,7 +71,7 @@ string QuadTree::init() {
     t.close();
     end = clock();
     result.resize(40);
-    sprintf_s(&result[0],result.size(),"Init Successfully in %d ms",end-start);
+    sprintf_s(&result[0],result.size(),"Init QuadTree Successfully in %d ms",end-start);
     return result;
 }
 
@@ -81,7 +81,9 @@ void QuadTree::insert(Point *p) {
     if (isLeaf()){
         if (value.size() < POINT_CAPACITY){
             value.push_back(p);
+            // 是叶子且叶子容量未满，直接插入即可
         }else{
+            //是叶子但是叶子容量已满，则叶子节点4分
             subdivide();
             // 重新分配节点到子节点叶子中
             for (auto i : value) {
@@ -132,170 +134,19 @@ Point *QuadTree::query(const Point &p) const {
     }
 }
 
-vector<Point *> QuadTree::findFirstNorthWestPoints() const {
-    auto tmp = this;
-    while(true){
-        // 查找顺序为西北，东北，西南，东南
-        // 若查找到了叶子节点，则对4个叶子判断，找到第一个有值的区域（叶子）
-        if (!tmp->nw->isLeaf()){
-            tmp = tmp->nw;
-        }else if (!tmp->ne->isLeaf()){
-            tmp = tmp->ne;
-        }else if (!tmp->sw->isLeaf()){
-            tmp = tmp->sw;
-        }else if (!tmp->se->isLeaf()){
-            tmp = tmp->se;
-        }else{
-            if (!tmp->nw->value.empty()){
-                tmp = tmp->nw;
-            }else if (!tmp->ne->value.empty()){
-                tmp = tmp->ne;
-            }else if (!tmp->sw->value.empty()){
-                tmp = tmp->sw;
-            }else if (!tmp->se->value.empty()){
-                tmp = tmp->se;
-            }else{
-                return tmp->value;
-            }
-            break;
-        }
-    }
-    return tmp->value;
-}
-
-vector<Point *> QuadTree::findFirstSouthEastPoints() const {
-    auto tmp = this;
-    while(true){
-        // 查找顺序为东南，西南，东北，西北
-        // 若查找到了叶子节点，则对4个叶子判断，找到第一个有值的区域（叶子）
-        if (!tmp->se->isLeaf()){
-            tmp = tmp->se;
-        }else if (!tmp->sw->isLeaf()){
-            tmp = tmp->sw;
-        }else if (!tmp->ne->isLeaf()){
-            tmp = tmp->ne;
-        }else if (!tmp->nw->isLeaf()){
-            tmp = tmp->nw;
-        }else{
-            if (!tmp->se->value.empty()){
-                tmp = tmp->se;
-            }else if (!tmp->sw->value.empty()){
-                tmp = tmp->sw;
-            }else if (!tmp->ne->value.empty()){
-                tmp = tmp->ne;
-            }else if (!tmp->nw->value.empty()){
-                tmp = tmp->nw;
-            }else{
-                return tmp->value;
-            }
-            break;
-        }
-    }
-    return tmp->value;
-}
-
-vector<Point *> QuadTree::findNorthWestPointsOnEast() const {
-    auto tmp = this;
-    while(true){
-        if (!tmp->nw->isLeaf()){
-            tmp = tmp->nw;
-        }else if (!tmp->ne->isLeaf()){
-            tmp = tmp->ne;
-        }else if (!tmp->sw->isLeaf()){
-            tmp = tmp->sw;
-        }else if (!tmp->se->isLeaf()){
-            tmp = tmp->se;
-        }else{
-            tmp = tmp->ne;
-            break;
-        }
-    }
-    return tmp->value;
-}
-
-vector<Point *> QuadTree::findNorthWestPointsOnSouth() const {
-    auto tmp = this;
-    while(true){
-        if (!tmp->nw->isLeaf()){
-            tmp = tmp->nw;
-        }else if (!tmp->ne->isLeaf()){
-            tmp = tmp->ne;
-        }else if (!tmp->sw->isLeaf()){
-            tmp = tmp->sw;
-        }else if (!tmp->se->isLeaf()){
-            tmp = tmp->se;
-        }else{
-            tmp = tmp->sw;
-            break;
-        }
-    }
-    return tmp->value;
-}
-
-vector<Point *> QuadTree::findSouthEastPointsOnNorthWest() const {
-    auto tmp = this;
-    while(true){
-        if (!tmp->se->isLeaf()){
-            tmp = tmp->se;
-        }else if (!tmp->sw->isLeaf()){
-            tmp = tmp->sw;
-        }else if (!tmp->ne->isLeaf()){
-            tmp = tmp->ne;
-        }else if (!tmp->nw->isLeaf()){
-            tmp = tmp->nw;
-        }else{
-            tmp = tmp->nw;
-            break;
-        }
-    }
-    return tmp->value;
-}
-
-vector<Point *> QuadTree::findSouthEastPointsOnNorthWestOnNorth() const {
-    auto tmp = this;
-    const QuadTree* front;
-    // front用于记录父节点，便于查找相邻分支
-    if (!this->se->isLeaf()){
-        tmp = tmp->se;
-    }
-    while(true){
-        if (!tmp->se->isLeaf()){
-            front = tmp;
-            tmp = tmp->se;
-        }else if (!tmp->sw->isLeaf()){
-            front = tmp;
-            tmp = tmp->sw;
-        }else if (!tmp->ne->isLeaf()){
-            front = tmp;
-            tmp = tmp->ne;
-        }else if (!tmp->nw->isLeaf()){
-            front = tmp;
-            tmp = tmp->nw;
-        }else{
-            tmp = front->ne->sw;
-            break;
-        }
-    }
-    return tmp->value;
-}
-
-Point *QuadTree::findNearestPoint(const Point &p) const {
-    auto v = searchNearbyPoints(p);
-    cout << "附近的点有"<<v.size() <<"个"<< endl;
-    return p.getMinDistancePoint(v);
-}
-
-// 查找距离p点距离小于r的点
+// 查找距离p点距离小于r的点 (r默认5000)
 vector<Point *> QuadTree::searchNearbyPoints(const Point &p, double r) const{
     vector<Point *> result;
     if (isLeaf()){
         for (auto &i : value){
+            // 距离小于r就插入result
             if (i->distance(p) <= r){
                 result.push_back(i);
             }
         }
         return result;
     }
+    // 递归的向下查询
     if (nw != nullptr){
         auto nwResult = nw->searchNearbyPoints(p, r);
         result.insert(result.end(), nwResult.begin(), nwResult.end());
@@ -316,15 +167,16 @@ vector<Point *> QuadTree::searchNearbyPoints(const Point &p, double r) const{
 }
 
 Point* QuadTree::findMostPowerfulPoint(Point& p) const{
-    auto v = searchNearbyPoints(p);
+    auto v = searchNearbyPoints(p,10000);
+    cout << "find " << v.size() << " points" << endl;
     return p.getMaxPowerPoint(v);
 }
 
 //轨迹移动
 void QuadTree::checkMove(mobile m) const {
     double step = 10; // 步长
-    double cos = m.getCos();
-    double sin = m.getSin();
+    double cos = m.getCos(); //x分量
+    double sin = m.getSin(); //y分量
     double dis = m.distance();
     int timer = 0; // 计时器
     Point p = Point(m.xs, m.ys);
@@ -341,15 +193,19 @@ void QuadTree::checkMove(mobile m) const {
             p.y += step * sin;
             cur = findMostPowerfulPoint(p);
         }
+        // 查找直到连接上第一个基站
         if (cur == nullptr)
             break;
+        // 如果pre != cur则连接到新基站
         if (pre != cur){
             pre = cur;
+            // 迭代获取精确值
             p.enterIterateCalculate(cur,pre,cos,sin);
             double time = p.distance(Point(m.xs,m.ys)) / (double(m.speed) * 50 / 3);
             timeStamp = getTimeStamp(time, m,t);
             // 格式化字符串
             cout << timeStamp << "\t与" << cur->value->id << "建立连接" << endl;
+            // 继续寻找断开连接的时刻
             while(step * timer < dis){
                 timer++;
                 p.x += step * cos;
@@ -372,15 +228,15 @@ void QuadTree::checkMove(mobile m) const {
 
 void QuadTree::checkOverlap(mobile m) const{
     double step = 10; // 步长
-    double cos = m.getCos();
-    double sin = m.getSin();
+    double cos = m.getCos(); // x分量
+    double sin = m.getSin(); // y分量
     double dis = m.distance();
     int timer = 0; // 计时器
     Point p = Point(m.xs, m.ys);
     Point *cur = nullptr; // 当前连接的基站
     Point *pre = nullptr; // 前一个连接的基站
-    auto *start_point = new Point();
-    auto *end_point = new Point();
+    auto *start_point = new Point(); // 进入重叠区域时的点
+    auto *end_point = new Point(); // 离开重叠区域时的点
     auto preTime = new tm;
     auto curTime = new tm;
     string preTimeStamp(11, '0');
@@ -401,26 +257,29 @@ void QuadTree::checkOverlap(mobile m) const{
         p.y += step * sin;
         cur = findMostPowerfulPoint(p);
     }
+    // 此时pre 和 cur为两个重叠的基站
+    // 从头开始查询
     Point tmp = Point(m.xs, m.ys);
     while(!tmp.isValid(*cur) || !tmp.isValid(*pre)){
         tmp.x += step * cos;
         tmp.y += step * sin;
     }
+    // 进入重叠区域后记录start_point的值
     start_point->x = tmp.x;
     start_point->y = tmp.y;
     while(tmp.isValid(*cur) && tmp.isValid(*pre)){
         tmp.x += step * cos;
         tmp.y += step * sin;
     }
+    // 离开重叠区域后记录end_point的值
     end_point->x = tmp.x;
     end_point->y = tmp.y;
-    // 迭代求得精确坐标,误差0.1m
+    // 迭代求得精确坐标
     start_point->enterIterateCalculate(cur,pre,cos,sin);
     end_point->outIterateCalculate(cur,pre,cos,sin);
     double time1 = start_point->distance(Point(m.xs, m.ys)) / (double(m.speed) * 50 / 3);
-    // 7.242773428
     double time2 = end_point->distance(Point(m.xs, m.ys)) / (double(m.speed) * 50 / 3);
-    // 7.799414063
+    // 时间差
     double time = (time2 - time1) * 60;
     preTimeStamp = getTimeStamp(time1, m, preTime);
     curTimeStamp = getTimeStamp(time2, m, curTime);
@@ -431,71 +290,4 @@ void QuadTree::checkOverlap(mobile m) const{
     delete end_point;
     delete preTime;
     delete curTime;
-}
-
-
-void QuadTree::checkConnectToFake(mobile m,const vector<fake_station *>& f) const{
-    double timer = 0;
-    Point p = Point(m.xs, m.ys);
-    int curHour = m.start_hour;
-    int curMinute = m.start_min;
-    int curSecond = 0;
-    while(timer <= m.distance() / (double (m.speed) * 1000/ 3600)){
-        for (const auto &item: f)
-        {
-            auto tmp = item->getPosition(timer,curHour,curMinute);
-            if (tmp->distance(p) <= 40){
-                string timeStamp(11, '\0');
-                auto t = new tm;
-                timeStamp = getTimeStamp(timer/60,m,t);
-                cout << timeStamp << "\t与" << item->id << "号伪基站建立连接" << endl;
-            }
-        }
-        timer++;
-        if (curSecond + timer >= 60){
-            curSecond = curSecond + int(timer) - 60;
-            curMinute++;
-            if (curMinute >= 60){
-                curMinute = 0;
-                curHour++;
-            }
-        }
-    }
-}
-
-void QuadTree::showResult() const {
-    auto m = readMobileInfo();
-    for (const auto& item: m)
-        checkMove(*item);
-}
-
-void QuadTree::extendTask2() const {
-    auto m = readMobileInfo();
-    checkOverlap(*m[2]);
-    checkOverlap(*m[5]);
-}
-
-
-// 升级功能1
-void QuadTree::advancedTask1() const {
-    auto f = readFakeInfo();
-    auto m = readMobileInfo();
-    checkConnectToFake(*m[11],f);
-}
-
-
-
-string getTimeStamp(double time, mobile m,tm* t){
-    string timeStamp(11, '\0');
-    if(time + m.start_min >= 60){
-        t->tm_hour = m.start_hour + (time + m.start_min) / 60; //小时进位
-        t->tm_min = int(time + m.start_min) % 60; //分钟进位，会丢失精度
-        t->tm_sec = (time + m.start_min - int(time + m.start_min)) * 60; //秒数进位，会丢失精度
-    }else{
-        t->tm_hour = m.start_hour;
-        t->tm_min = int(time + m.start_min) % 60;
-        t->tm_sec = (time + m.start_min - int(time + m.start_min)) * 60;
-    }
-    strftime(&timeStamp[0], timeStamp.size(), "[%H:%M:%S]", t);
-    return timeStamp;
 }

@@ -4,10 +4,41 @@
 #include <cmath>
 #include "QuadTree.h"
 #include "util.h"
+
+vector<mobile *> mobileInfo;
+vector<fake *> fakeInfo;
+
+void showChoice(){
+    cout << "0.退出程序" << endl;
+    cout << "1.显示首个西北角的区域" << endl;
+    cout << "2.显示首个东南角的区域" << endl;
+    cout << "3.显示西北角第一个区域的东侧区域" << endl;
+    cout << "4.显示西北角第一个区域的南侧区域" << endl;
+    cout << "5.显示东南角第一个区域的西北侧区域" << endl;
+    cout << "6.显示东南角第一个区域的西北侧的北侧区域" << endl;
+    cout << "7.查找指定点坐标的要求基站" << endl;
+    cout << "8.显示移动终端的轨迹和基站连接情况" << endl;
+    cout << "9.计算重叠区域的时间" << endl;
+}
+
+string initUtil(){
+    clock_t start = clock();
+    fakeInfo = readFakeInfo();
+    mobileInfo = readMobileInfo();
+    clock_t end = clock();
+    if (fakeInfo.empty() || mobileInfo.empty()){
+        return "Init Util Failed";
+    }
+    string result(50,'\0');
+    sprintf_s(&result[0],result.size(),"Init Util Successfully in %d ms",end-start);
+    return result;
+}
+
 double Point::distance(const Point& p){
     return sqrt((pow((p.y - this->y),2)+pow((p.x - this->x),2)));
 }
 
+// 从给定的Points里面获取距离最小的基站
 Point* Point::getMinDistancePoint(const vector<Point *>& p) const{
     int index = 0;
     double minD = 1 << 30;
@@ -21,6 +52,7 @@ Point* Point::getMinDistancePoint(const vector<Point *>& p) const{
     return p[index];
 }
 
+// 从给定的Points里面求相对强度最大的基站
 Point *Point::getMaxPowerPoint(const vector<Point *>& p){
     int index = 0;
     double ePower = 0;
@@ -48,6 +80,7 @@ double mobile::getSin(){
     return (ye - ys) / distance();
 }
 
+// 计算相对有效强度
 double Point::calculateEquivalentIntensity(const Point p) {
     double result = 0;
     if (p.value->type == "城区"){
@@ -63,6 +96,7 @@ double Point::calculateEquivalentIntensity(const Point p) {
     return result;
 }
 
+// 从文件中读取移动终端信息
 vector<mobile *> readMobileInfo() {
     ifstream f("./data/yd001.txt",ios::in);
     vector<mobile *> result;
@@ -99,6 +133,7 @@ vector<mobile *> readMobileInfo() {
     return result;
 }
 
+// 从文件中读取伪基站信息
 vector<fake *> readFakeInfo(){
     vector<fake *> fake;
     ifstream f("./data/wz001.txt",ios::in);
@@ -137,7 +172,7 @@ vector<fake *> readFakeInfo(){
     return fake;
 }
 
-// 迭代求值 精度0.1m
+// 进入基站有效范围迭代求值
 void Point::enterIterateCalculate(Point* cur,Point* pre,double cos,double sin,int step,double precision){
     double _x = this->x;
     double _y = this->y;
@@ -162,6 +197,7 @@ void Point::enterIterateCalculate(Point* cur,Point* pre,double cos,double sin,in
     delete mid;
 }
 
+
 void Point::outIterateCalculate(Point* cur,Point* pre,double cos,double sin,int step,double precision){
     double _x = this->x;
     double _y = this->y;
@@ -171,6 +207,7 @@ void Point::outIterateCalculate(Point* cur,Point* pre,double cos,double sin,int 
     double mid_y = (_y + pre_y) / 2;
     auto* mid = new Point(mid_x, mid_y);
     while(fabs(_x - pre_x) >= precision || fabs(_y - pre_y) >= precision){
+        // mid不在重叠区则对_x,_y改变
         if (!mid->isValid(*cur) || !mid->isValid(*pre)){
             _x = mid->x;
             _y = mid->y;
@@ -186,6 +223,7 @@ void Point::outIterateCalculate(Point* cur,Point* pre,double cos,double sin,int 
     delete mid;
 }
 
+// 出重叠区域时的迭代 (针对单个基站的迭代)
 void Point::outIterateCalculate(Point *pre, double cos, double sin, int step, double precision) {
     double _x = this->x;
     double _y = this->y;
@@ -210,37 +248,19 @@ void Point::outIterateCalculate(Point *pre, double cos, double sin, int step, do
     delete mid;
 }
 
+// 判断this与p之间的是否有效
 bool Point::isValid(Point p) {
     return this->calculateEquivalentIntensity(p) > 0.999999;
 }
 
 
 Point * fake::getPosition(double time,int curHour,int curMin){
-    auto * p = new Point();
-    if(this->start_hour > curHour){
-        p->x = this->xs;
-        p->y = this->ys;
-        p->id = this->id;
-        return p;
-    }
-    if (this->start_hour == curHour && this->start_min >= curMin){
-        p->x = this->xs;
-        p->y = this->ys;
-        p->id = this->id;
-        return p;
-    }
-    if (this->start_hour < curHour  && this->start_min + time / 60.0 < curMin){
-        p->x = this->xe;
-        p->y = this->ye;
-        p->id = this->id;
-        return p;
-    }
+    auto p = new Point(this->xs,this->ys);
     p->id = this->id;
-    double cos = this->getCos();
-    double sin = this->getSin();
-    double distance = double(this->speed) * 1000.0 / 3600.0 * time;
-    p->x = this->xs + distance * cos;
-    p->y = this->ys + distance * sin;
+    // 计算当前时间与起始时间的差值
+    double diff = abs(curHour - this->start_hour) * 3600 + abs(curMin - this->start_min) * 60 + time;
+    p->x += double(this->speed) * 1000.0 / 3600.0 * time * this->getCos();
+    p->y += double(this->speed) * 1000.0 / 3600.0 * time * this->getSin();
     return p;
 }
 
@@ -256,4 +276,42 @@ double fake_station::getSin() {
     double y = this->ye - this->ys;
     double dis = sqrt(x*x + y*y);
     return y / dis;
+}
+
+double fake_station::distance() {
+    double x = this->xe - this->xs;
+    double y = this->ye - this->ys;
+    return sqrt(x*x + y*y);
 };
+
+// 根据time获取当前时间戳
+string getTimeStamp(double time, mobile m,tm* t){
+    string timeStamp(11, '\0');
+    if(time + m.start_min >= 60){
+        t->tm_hour = m.start_hour + (time + m.start_min) / 60; //小时进位
+        t->tm_min = int(time + m.start_min) % 60; //分钟进位，会丢失精度
+        t->tm_sec = (time + m.start_min - int(time + m.start_min)) * 60; //秒数进位，会丢失精度
+    }else{
+        t->tm_hour = m.start_hour;
+        t->tm_min = int(time + m.start_min) % 60;
+        t->tm_sec = (time + m.start_min - int(time + m.start_min)) * 60;
+    }
+    strftime(&timeStamp[0], timeStamp.size(), "[%H:%M:%S]", t);
+    return timeStamp;
+}
+
+vector<fake *> fakeFilter(vector<fake *> f,mobile m){
+    vector<fake *> result;
+    for (const auto &item: f){
+        int start1 = item->start_hour * 60 + item->start_min;
+        int end1 = item->end_hour * 60 + item->end_min;
+        int start2 = m.start_hour * 60 + m.start_min;
+        int end2 = m.end_hour * 60 + m.end_min;
+        if (end1 <= start2 || end2 <= start1){
+            continue;
+        }else{
+            result.push_back(item);
+        }
+    }
+    return result;
+}

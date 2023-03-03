@@ -1,0 +1,4 @@
+D:\Jetbrains\apps\CLion\ch-1\231.7665.29\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=D:/Jetbrains/apps/CLion/ch-1/231.7665.29/bin/ninja/win/x64/ninja.exe -G Ninja -S D:\code\cpp\GSM -B D:\code\cpp\GSM\cmake-build-release
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/code/cpp/GSM/cmake-build-release

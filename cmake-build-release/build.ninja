@@ -12,7 +12,7 @@
 
 # =============================================================================
 # Project: GSM
-# Configurations: Debug
+# Configurations: Release
 # =============================================================================
 
 #############################################
@@ -24,7 +24,7 @@ ninja_required_version = 1.5
 #############################################
 # Set configuration variable for custom commands.
 
-CONFIGURATION = Debug
+CONFIGURATION = Release
 # =============================================================================
 # Include auxiliary files.
 
@@ -39,7 +39,7 @@ include CMakeFiles/rules.ninja
 #############################################
 # Logical path to working directory; prefix for absolute paths.
 
-cmake_ninja_workdir = D$:/code/cpp/GSM/cmake-build-debug/
+cmake_ninja_workdir = D$:/code/cpp/GSM/cmake-build-release/
 # =============================================================================
 # Object build statements for EXECUTABLE target GSM
 
@@ -49,27 +49,27 @@ cmake_ninja_workdir = D$:/code/cpp/GSM/cmake-build-debug/
 
 build cmake_object_order_depends_target_GSM: phony || CMakeFiles/GSM.dir
 
-build CMakeFiles/GSM.dir/main.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/GSM/main.cpp || cmake_object_order_depends_target_GSM
+build CMakeFiles/GSM.dir/main.cpp.obj: CXX_COMPILER__GSM_Release D$:/code/cpp/GSM/main.cpp || cmake_object_order_depends_target_GSM
   DEP_FILE = CMakeFiles\GSM.dir\main.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\GSM.dir
   OBJECT_FILE_DIR = CMakeFiles\GSM.dir
 
-build CMakeFiles/GSM.dir/util.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/GSM/util.cpp || cmake_object_order_depends_target_GSM
+build CMakeFiles/GSM.dir/util.cpp.obj: CXX_COMPILER__GSM_Release D$:/code/cpp/GSM/util.cpp || cmake_object_order_depends_target_GSM
   DEP_FILE = CMakeFiles\GSM.dir\util.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\GSM.dir
   OBJECT_FILE_DIR = CMakeFiles\GSM.dir
 
-build CMakeFiles/GSM.dir/QuadTree.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/GSM/QuadTree.cpp || cmake_object_order_depends_target_GSM
+build CMakeFiles/GSM.dir/QuadTree.cpp.obj: CXX_COMPILER__GSM_Release D$:/code/cpp/GSM/QuadTree.cpp || cmake_object_order_depends_target_GSM
   DEP_FILE = CMakeFiles\GSM.dir\QuadTree.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\GSM.dir
   OBJECT_FILE_DIR = CMakeFiles\GSM.dir
 
-build CMakeFiles/GSM.dir/task.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/GSM/task.cpp || cmake_object_order_depends_target_GSM
+build CMakeFiles/GSM.dir/task.cpp.obj: CXX_COMPILER__GSM_Release D$:/code/cpp/GSM/task.cpp || cmake_object_order_depends_target_GSM
   DEP_FILE = CMakeFiles\GSM.dir\task.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\GSM.dir
   OBJECT_FILE_DIR = CMakeFiles\GSM.dir
 
@@ -81,8 +81,8 @@ build CMakeFiles/GSM.dir/task.cpp.obj: CXX_COMPILER__GSM_Debug D$:/code/cpp/GSM/
 #############################################
 # Link the executable GSM.exe
 
-build GSM.exe: CXX_EXECUTABLE_LINKER__GSM_Debug CMakeFiles/GSM.dir/main.cpp.obj CMakeFiles/GSM.dir/util.cpp.obj CMakeFiles/GSM.dir/QuadTree.cpp.obj CMakeFiles/GSM.dir/task.cpp.obj
-  FLAGS = -g
+build GSM.exe: CXX_EXECUTABLE_LINKER__GSM_Release CMakeFiles/GSM.dir/main.cpp.obj CMakeFiles/GSM.dir/util.cpp.obj CMakeFiles/GSM.dir/QuadTree.cpp.obj CMakeFiles/GSM.dir/task.cpp.obj
+  FLAGS = -O3 -DNDEBUG
   LINK_FLAGS = -static-libgcc -static-libstdc++
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\GSM.dir
@@ -97,7 +97,7 @@ build GSM.exe: CXX_EXECUTABLE_LINKER__GSM_Debug CMakeFiles/GSM.dir/main.cpp.obj 
 # Utility command for edit_cache
 
 build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cmd.exe /C "cd /D D:\code\cpp\GSM\cmake-build-debug && D:\Jetbrains\apps\CLion\ch-1\231.7665.29\bin\cmake\win\x64\bin\cmake.exe -E echo "No interactive CMake dialog available.""
+  COMMAND = cmd.exe /C "cd /D D:\code\cpp\GSM\cmake-build-release && D:\Jetbrains\apps\CLion\ch-1\231.7665.29\bin\cmake\win\x64\bin\cmake.exe -E echo "No interactive CMake dialog available.""
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -108,7 +108,7 @@ build edit_cache: phony CMakeFiles/edit_cache.util
 # Utility command for rebuild_cache
 
 build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cmd.exe /C "cd /D D:\code\cpp\GSM\cmake-build-debug && D:\Jetbrains\apps\CLion\ch-1\231.7665.29\bin\cmake\win\x64\bin\cmake.exe --regenerate-during-build -SD:\code\cpp\GSM -BD:\code\cpp\GSM\cmake-build-debug"
+  COMMAND = cmd.exe /C "cd /D D:\code\cpp\GSM\cmake-build-release && D:\Jetbrains\apps\CLion\ch-1\231.7665.29\bin\cmake\win\x64\bin\cmake.exe --regenerate-during-build -SD:\code\cpp\GSM -BD:\code\cpp\GSM\cmake-build-release"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -126,7 +126,7 @@ build GSM: phony GSM.exe
 # =============================================================================
 
 #############################################
-# Folder: D:/code/cpp/GSM/cmake-build-debug
+# Folder: D:/code/cpp/GSM/cmake-build-release
 
 build all: phony GSM.exe
 
