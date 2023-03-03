@@ -102,7 +102,8 @@ vector<mobile *> readMobileInfo() {
     vector<mobile *> result;
     if (!f.is_open()){
         cout << "移动终端文件打开失败" << endl;
-        return {};
+        system("pause");
+        exit(1);
     }
     string line;
     getline(f,line); // 跳过第一行
@@ -139,7 +140,8 @@ vector<fake *> readFakeInfo(){
     ifstream f("./data/wz001.txt",ios::in);
     if (!f.is_open()){
         cout << "假基站文件打开失败" << endl;
-        return {};
+        system("pause");
+        exit(1);
     }
     string line;
     getline(f,line); // 跳过第一行

@@ -15,14 +15,17 @@ string QuadTree::init() {
         f1.open("./data/jz001.txt", ios::in);
         f2.open("./data/jz002.txt", ios::in);
         if (!f1.is_open()|| !f2.is_open()) {
-            return "Error open file";
+            cout << "打开基站文件失败" << endl;
+            system("pause");
+            exit(1);
         }
     }
     else{
         t.open("./data/test.txt", ios::in);
         cout << "test mode" << endl;
         if (!t.is_open()) {
-            return "Error open file";
+            system("pause");
+            exit(1);
         }
     }
     // read jz001.txt
@@ -167,8 +170,7 @@ vector<Point *> QuadTree::searchNearbyPoints(const Point &p, double r) const{
 }
 
 Point* QuadTree::findMostPowerfulPoint(Point& p) const{
-    auto v = searchNearbyPoints(p,10000);
-    cout << "find " << v.size() << " points" << endl;
+    auto v = searchNearbyPoints(p);
     return p.getMaxPowerPoint(v);
 }
 

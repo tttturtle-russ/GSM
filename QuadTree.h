@@ -72,8 +72,12 @@ struct Point {
         return this->x == p.x && this->y == p.y;
     }
     // жиди<<
-    friend ostream& operator << (ostream& os, const Point* p){
-        os << p->x << "," << p->y << "," << p->value->id << "," << p->value->power << "," << p->value->type;
+    friend ostream& operator << (ostream& os, const Point* item){
+        if (item == nullptr){
+            os << "empty point" << endl;
+            return os;
+        }
+        os << "x : " << item->x << "    y : "<< item->y << "    id : "<< item->value->id << endl;
         return os;
     }
     double distance(const Point &p);

@@ -75,7 +75,12 @@ int main() {
                 for (int i = 0; i < 3; ++i) {
                     cout << "输入点坐标:" << endl;
                     cin >> p->x >> p->y;
-                    cout << "最强基站" << q->findMostPowerfulPoint(*p) << endl;
+                    auto item = q->findMostPowerfulPoint(*p);
+                    if (item == nullptr){
+                        cout << "附近无有效基站" << endl;
+                    }else{
+                        cout << "x : " << item->x << "    y : "<< item->y << "    id : "<< item->value->id <<"    type:"<< item->value->type <<"   power" << item->value->power <<endl;
+                    }
                 }
                 system("pause");
                 system("cls");
